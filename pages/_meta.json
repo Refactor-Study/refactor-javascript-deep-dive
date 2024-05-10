@@ -1,0 +1,11 @@
+{
+  "-": {
+    "type": "separator",
+    "title": "소개"
+  },
+  "index": "Refactor;",
+  "rules": "Rules;",
+  "--": {
+    "type": "separator"
+  }
+}
