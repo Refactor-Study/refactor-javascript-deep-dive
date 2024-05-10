@@ -3,7 +3,7 @@ type AuthorType = {
   githubId: string;
 };
 
-export const authorsInfo: AuthorType[] = [
+export const authorsInfo: Readonly<AuthorType[]> = [
   {
     name: '이호연',
     githubId: 'ho991217',
