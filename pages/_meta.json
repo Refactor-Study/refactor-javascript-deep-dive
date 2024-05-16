@@ -5,6 +5,7 @@
   },
   "index": "Refactor;",
   "rules": "Rules;",
+  "chapter1": "01 데이터 타입",
   "--": {
     "type": "separator"
   }
