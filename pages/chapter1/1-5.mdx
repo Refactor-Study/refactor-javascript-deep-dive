@@ -1,7 +1,8 @@
 ---
-title: 1-5 불변 객체
+title: 불변 객체
 date: 2024년 5월 20일
 author: 이가은
+image: /images/chapter1/thumbnail_1-5.png
 ---
 
 지난 시간에 배운 내용에 따르면, 자바스크립트의 데이터 타입은 기본형과 참조형으로 분류되며, <br/>
@@ -16,8 +17,8 @@ author: 이가은
 
 ```js
 var user = {
-   name: 'Gaeun',
-   gender: 'female',
+  name: 'Gaeun',
+  gender: 'female',
 };
 
 var user2 = user;
@@ -26,8 +27,8 @@ user2.name = 'Jiwon';
 ```
 
 <br />
-그러나 아래의 그림과 같이 user 객체와 user2 객체는 같은 내부 프로퍼티를 공유하므로, user2의 이름을 변경할 시 기존 user의
-이름도 함께 변경됩니다.
+그러나 아래의 그림과 같이 user 객체와 user2 객체는 같은 내부 프로퍼티를 공유하므로,
+user2의 이름을 변경할 시 기존 user의 이름도 함께 변경됩니다.
 
 ![data_type](/images/chapter1/05/01.png)
 
@@ -41,23 +42,23 @@ user2.name = 'Jiwon';
 
 ```js
 var user = {
-   name: 'Gaeun',
-   gender: 'female',
+  name: 'Gaeun',
+  gender: 'female',
 };
 
 var changeName = function (user, newName) {
-   return {
-      name: newName,
-      gender: user.gender,
-   };
+  return {
+    name: newName,
+    gender: user.gender,
+  };
 };
 
 var user2 = changeName(user, 'Jiwon');
 ```
 
 <br />
-그림과 같이 user 객체와 user2는 서로 다른 데이터를 참조하고 있으므로, 각각의 내부 프로퍼티 변경에 영향을 받지 않게 됩니다.
-![data_type](/images/chapter1/05/02.png)
+그림과 같이 user 객체와 user2는 서로 다른 데이터를 참조하고 있으므로, 각각의 내부
+프로퍼티 변경에 영향을 받지 않게 됩니다. ![data_type](/images/chapter1/05/02.png)
 
 <br/>
 그러나 이 방법의 경우 아래와 같이 객체가 가진 프로퍼티가 많으면, 이를 모두 작성해야 한다는 단점을 지닙니다.
@@ -84,15 +85,15 @@ var changeName = function (user, newName) {
 
 ```js
 var user = {
-   name: 'Gaeun',
-   gender: 'female',
+  name: 'Gaeun',
+  gender: 'female',
 };
 var copyObject = function (target) {
-   var result = {};
-   for (var prop in target) {
-      result[prop] = target[prop];
-   }
-   return result;
+  var result = {};
+  for (var prop in target) {
+    result[prop] = target[prop];
+  }
+  return result;
 };
 var user2 = copyObject(user);
 user2.name = 'Jiwon';
@@ -114,13 +115,13 @@ console.log(user === user2); // false
 
 ```js
 var user = {
-   name: 'Gaeun',
-   gender: 'female',
-   //👇🏻 참조형 데이터가 저장된 프로퍼티
-   urls: {
-      github: 'github.com/gaeunnlee',
-      blog: 'gaeunnlee.tistory.com',
-   },
+  name: 'Gaeun',
+  gender: 'female',
+  //👇🏻 참조형 데이터가 저장된 프로퍼티
+  urls: {
+    github: 'github.com/gaeunnlee',
+    blog: 'gaeunnlee.tistory.com',
+  },
 };
 ```
 

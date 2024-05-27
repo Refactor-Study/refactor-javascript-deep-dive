@@ -1,6 +1,4 @@
 {
   "2-1": "실행 컨텍스트란?",
-  "2-2": "VariableEnvironment",
-  "2-3": "LexicalEnvironment",
-  "2-4": "this"
+  "2-2": "렉시컬 환경과 호이스팅"
 }
