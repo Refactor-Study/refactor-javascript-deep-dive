@@ -4,3 +4,54 @@ date: 2024년 5월 25일
 author: 이호연
 image: /images/chapter2/thumbnail_2-1.png
 ---
+
+## 실행 컨텍스트란?
+
+실행 컨텍스트는 실행할 코드에 제공할 환경 정보들을 모아놓은 **객체**입니다. <br/>
+동일 환경에 있는 코드들을 실행할 때 필요한 환경 정보들을 모아놓은 객체로, 실행 컨텍스트는 크게 두가지로 구분됩니다.
+
+1. **전역 실행 컨텍스트** (Global Execution Context)
+2. **함수 실행 컨텍스트** (Functional Execution Context)
+
+## 콜 스택
+
+이 컨텍스트들은 **콜 스택**(Call Stack)에 쌓이며, 가장 위에 있는 컨텍스트가 현재 실행중인 컨텍스트가 됩니다. <br/>
+다음의 예제를 봅시다.
+
+```javascript showLineNumbers copy
+// ------------------------------ (1)
+var a = 1;
+
+function outer() {
+  function inner() {
+    console.log(a); // undefined
+    var a = 3;
+  }
+  inner(); // ------------------ (2)
+  console.log(a); // 1
+}
+outer(); // -------------------- (3)
+console.log(a); // 1
+```
+
+위 예제에서는 전역 실행 컨텍스트와 outer 함수 실행 컨텍스트, inner 함수 실행 컨텍스트가 존재합니다. <br/><br/>
+![call_stack_example](/images/chapter2/call_stack_example.png)
+[스택은 다들 아시죠?]
+
+- 전역 실행 컨텍스트가 우선 콜 스택에 쌓이게 됩니다.
+- 전역 실행 컨텍스트가 콜 스택의 맨 위에 있을 때, outer 함수 실행 컨텍스트가 쌓입니다.
+- outer 함수 실행 컨텍스트가 콜 스택의 맨 위에 있을 때, inner 함수 실행 컨텍스트가 쌓입니다.
+- inner 함수 실행 컨텍스트가 콜 스택의 맨 위에 있을 때, console.log(a);가 실행됩니다. -> 이때 a는 undefined입니다.
+- inner 함수 실행 컨텍스트가 콜 스택에서 제거되고, outer 함수 실행 컨텍스트가 콜 스택의 맨 위에 있을 때, console.log(a);가 실행됩니다. -> 이때 a는 1입니다.
+- outer 함수 실행 컨텍스트가 콜 스택에서 제거되고, 전역 실행 컨텍스트가 콜 스택의 맨 위에 있을 때, console.log(a);가 실행됩니다. -> 이때 a는 1입니다.
+- 전역 실행 컨텍스트가 콜 스택에서 제거됩니다.
+
+## 컨텍스트 객체
+
+각 실행 컨텍스트는 **VariableEnvironment**, **LexicalEnvironment**, **ThisBinding**의 세 가지 정보를 담고 있습니다.
+
+| 속성                | 설명                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| VariableEnvironment | 현재 컨텍스트 내의 식별자들에 대한 정보, 외부 환경에 대한 정보. `LexicalEnvironment`의 snapshot이라 할 수 있음 |
+| LexicalEnvironment  | `VariableEnvironment`와 같은 정보를 담고있지만, 변경사항이 실시간으로 반영 됨                                  |
+| ThisBinding         | this 키워드가 참조하는 객체                                                                                    |
