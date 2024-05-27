@@ -48,10 +48,10 @@ console.log(a); // 1
 
 ## 컨텍스트 객체
 
-각 실행 컨텍스트는 **VariableEnvironment**, **LexicalEnvironment**, **ThisBinding**의 세 가지 정보를 담고 있습니다.
+각 실행 컨텍스트는 **Variable Environment**, **Lexical Environment**, **This Binding**의 세 가지 정보를 담고 있습니다.
 
-| 속성                | 설명                                                                                                           |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| VariableEnvironment | 현재 컨텍스트 내의 식별자들에 대한 정보, 외부 환경에 대한 정보. `LexicalEnvironment`의 snapshot이라 할 수 있음 |
-| LexicalEnvironment  | `VariableEnvironment`와 같은 정보를 담고있지만, 변경사항이 실시간으로 반영 됨                                  |
-| ThisBinding         | this 키워드가 참조하는 객체                                                                                    |
+| 속성                 | 설명                                                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Variable Environment | 현재 컨텍스트 내의 식별자들에 대한 정보, 외부 환경에 대한 정보. `Lexical Environment`의 snapshot이라 할 수 있음 |
+| Lexical Environment  | `Variable Environment`와 같은 정보를 담고있지만, 변경사항이 실시간으로 반영 됨                                  |
+| This Binding         | this 키워드가 참조하는 객체                                                                                     |

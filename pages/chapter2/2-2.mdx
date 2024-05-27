@@ -1,6 +1,250 @@
 ---
-title: VariableEnvironment
+title: 렉시컬 환경과 호이스팅
 date: 2024년 5월 25일
 author: 이호연
 image: /images/chapter2/thumbnail_2-2.png
 ---
+
+## Variable Environment와 Lexical Environment
+
+`Variable Environment`는 실행 컨텍스트의 하위 컴포넌트 중 하나로, 현재 컨텍스트 내의 식별자들에 대한 정보와 외부 환경에 대한 정보를 담고 있습니다. <br/>
+실행 컨텍스트가 생성될 때, `Variable Environment`에 정보들을 담은 다음, 이것을 `Lexical Environment`에 복사합니다. <br/>
+
+import { Callout } from 'nextra/components';
+
+<Callout emoji='💡' type='info'>
+  이후에는 `Lexical Environment`를 사용하게 되므로, `Lexical Environment`를
+  알아보도록 합시다.
+</Callout>
+
+### 렉시컬 환경(Lexical Environment)
+
+`LexicalEnvironment`는 `어휘적 환경`이라고도 불리며, `VariableEnvironment`의 snapshot, 즉 순간의 정보를 담고 있습니다. <br/>
+이 `LexicalEnvironment`는 실시간으로 변경사항이 반영됩니다.
+
+![venv_lenv](/images/chapter2/venv_lenv.png) <br/>
+
+## 환경 레코드와 호이스팅
+
+**환경 레코드(Environment Record)** 에는 현재 컨텍스트 내의 식별자들에 대한 정보와 외부 환경에 대한 정보가 담겨 있습니다.<br/>
+
+<Callout emoji="🤔">
+식별자가 뭐였지?
+<ul className='list-inside'>
+  <li>var로 선언된 변수명</li>
+  <li>함수명</li>
+  <li>함수의 매개변수명 등</li>
+</ul>
+</Callout>
+
+자바스크립트 엔진은 코드를 실행하기 전, 실행 컨텍스트를 순차적으로 훑어보며 선언문을 찾아 `환경 레코드`에 저장합니다. <br/>
+결국 자바스크립트 엔진은 코드를 실행하기 전에 해당 환경의 변수명을 미리 알고 있는 셈입니다. <br/>
+이것을 **호이스팅(Hoisting)** 이라고 합니다.
+
+### 변수의 호이스팅
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>hoist</emp>
+  <ol className='list-decimal'>
+    <li className='flex flex-row gap-1'>
+      <div>1.</div>
+      <div className='bg-blue-200 px-[2px]'>동사</div>
+      <span>(흔히 밧줄이나 장비를 이용하여) 들어[끌어]올리다</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>2.</div>
+      <div className='bg-blue-200 px-[2px]'>명사</div>
+      <span>(화물·장애인을 들어올리기 위한) 승강 장치</span>
+    </li>
+  </ol>
+</Callout>
+`호이스팅 (hoisting)`이라는 용어는 사전적으로 '들어올리다'라는 뜻을 가지고 있습니다. <br />
+자바스크립트에서는 코드를 실행하기 전, 선언문을 끌어올려서 처리하는 것을
+의미합니다.
+
+아래는 호이스팅 과정을 보여주는 코드입니다.
+
+import { Tabs } from 'nextra/components';
+
+<Tabs items={['1. 원본 코드', '2. 매개변수를 변수 선언/할당으로 간주한 코드', '3. 호이스팅이 완료된 코드']}>
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="원본 코드"
+  function a(x) {   // 수집 대상 1(매개변수)
+    console.log(x); // (1)
+    var x;          // 수집 대상 2(변수 선언)
+    console.log(x); // (2)
+    var x = 2;      // 수집 대상 3(변수 선언)
+    console.log(x); // (3)
+  }
+  a(1);
+  ```
+  렉시컬 환경의 입장에서는, 매개변수를 가져오는 것이나 변수를 선언하는 것이나 동일하게 동작합니다. <br />
+  즉, 인자를 함수 내부의 다른 코드보다 먼저 선언/할당 한것으로 간주할 수 있습니다.
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="매개변수를 변수 선언/할당으로 간주한 코드" {1-2, 9}
+  function a() {
+    var x = 1;      // 수집 대상 1(매개변수 선언)
+    console.log(x); // (1)
+    var x;          // 수집 대상 2(변수 선언)
+    console.log(x); // (2)
+    var x = 2;      // 수집 대상 3(변수 선언)
+    console.log(x); // (3)
+  }
+  a();
+  ```
+  이 상태에서 호이스팅을 처리해볼 수 있습니다. <br/>
+  환경 레코드는 현재 실행 컨텍스트의 대상 코드 내의 선언 과정만 수집하므로, 할당 과정은 원래 자리에 남아있습니다. <br/>
+  </Tabs.Tab>
+  
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="호이스팅이 완료된 코드" {2-4}
+  function a() {
+    var x;          // 수집 대상 1의 선언부
+    var x;          // 수집 대상 2의 선언부
+    var x;          // 수집 대상 3의 선언부
+
+    x = 1;          // 수집 대상 1의 할당부
+    console.log(x); // (1)
+    console.log(x); // (2)
+    x = 2;          // 수집 대상 3의 할당부
+    console.log(x); // (3)
+  }
+  a();
+  ```
+  </Tabs.Tab>
+</Tabs>
+
+이제 호이스팅이 되었으니, 코드를 실행할 차례입니다. <br/>
+
+- 2번째 줄에서는 변수 `x`를 선언합니다.
+- 3번, 4번째 줄에서는 변수 `x`를 선언합니다. 이때, 이미 선언된 변수 `x`가 있으므로 무시합니다.
+- 6번째 줄에서는 변수 `x`에 1을 할당합니다. 실제로는 1을 메모리 값 저장공간에 담고, 변수 `x`에 그 주소를 할당합니다.
+- 7번, 8번줄에서는 변수 `x`에 할당된 값을 출력합니다. (1) (2) 모두 1이 출력됩니다.
+- 9번째 줄에서는 변수 `x`에 2를 할당합니다. 숫자 2를 별도의 메모리에 저장하고, 변수 `x`에 그 주소를 할당합니다.
+- 10번째 줄에서는 변수 `x`에 할당된 값을 출력합니다. 2가 출력됩니다.
+- 모든 코드가 실행되었으므로, 실행 컨텍스트가 콜 스택에서 제거됩니다.
+
+<Callout emoji="🤔">
+  그럼 let, const는 호이스팅이 일어나지 않을까요? - [TDZ란?](https://stackoverflow.com/questions/33198849/what-is-the-temporal-dead-zone/33198850#33198850)
+</Callout>
+
+### 함수의 호이스팅
+
+<Tabs items={['1. 원본 코드', '2. 호이스팅이 완료된 코드', '3. 함수 선언문을 함수 표현식으로 바꾼 코드']}>
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="원본 코드"
+  function a() {
+    console.log(b);   // (1)
+    var b = 'bbb';    // 수집 대상 1(변수 선언)
+    console.log(b);   // (2)
+    function b () {}  // 수집 대상 2(함수 선언)
+    console.log(b);   // (3)
+  }
+  a();
+  ```
+
+  `a 함수`를 실행하는 순간 `a 함수`의 실행 컨텍스트가 생성됩니다. 이때 변수명과 함수명의 정보가 호이스팅됩니다. <br/>
+  변수는 선언부만 호이스팅 되지만, 함수 선언은 함수 전체가 호이스팅됩니다.
+
+  <Callout emoji="🤔">
+    브랜든 아이크 아저씨는 왜 그렇게 만든걸까요?
+  </Callout>
+
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="매개변수를 변수 선언/할당으로 간주한 상태" {2-3} /b = 'bbb';/
+  function a() {
+    var b;            // 수집 대상 1: 변수는 선언부만 수집
+    function b () {}; // 수집 대상 2: 함수는 전체 수집
+
+    console.log(b); // (1)
+    b = 'bbb';      // 할당부는 원래 자리에 남아있음
+    console.log(b); // (2)
+    console.log(b); // (3)
+  }
+  a();
+  ```
+  이 상태에서 호이스팅을 처리해볼 수 있습니다. <br/>
+  환경 레코드는 현재 실행 컨텍스트의 대상 코드 내의 선언 과정만 수집하므로, 할당 과정은 원래 자리에 남아있습니다. <br/>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+  ```js showLineNumbers copy filename="호이스팅이 완료된 상태" {3}
+  function a() {
+    var b;
+    var b = function b () {};
+
+    console.log(b); // (1)
+    b = 'bbb';
+    console.log(b); // (2)
+    console.log(b); // (3)
+  }
+  a();
+  ```
+  호이스팅이 끝난 함수는 변수에 함수를 할당한 것처럼 동작합니다. <br/>
+  </Tabs.Tab>
+</Tabs>
+
+이제 호이스팅이 끝났으니 함수를 실행해봅시다. <br />
+
+- 2번째 줄에서는 변수 `b`를 선언합니다.
+- 3번째 줄에서는 함수 `b`를 다시 선언합니다. 이때, 식별자 `b`는 이미 메모리에 담겨있으므로 선언과정은 무시됩니다. <br /> 그러나 함수는 별도의 메모리에 저장되고, 변수 `b`에 그 주소를 할당합니다.
+- 5번째 줄에서는 변수 `b`에 할당된 값을 출력합니다. `ƒ b () {}{:js}`가 출력됩니다.
+- 6번째 줄에서는 변수 `b`에 'bbb'를 할당합니다. 문자열 'bbb'를 별도의 메모리에 저장하고, 변수 `b`에 그 주소를 할당합니다.
+- 7번, 8번째 줄에서는 변수 `b`에 할당된 값을 출력합니다. 모두 'bbb'가 출력됩니다.
+- 모든 코드가 실행되었으므로, 실행 컨텍스트가 콜 스택에서 제거됩니다.
+
+<br />
+
+<Callout emoji="🤔">
+      ```js
+      function a() {
+        console.log(b); // (1)
+        var b = 'bbb';
+        function b () {};
+      }
+      a();
+      ```
+      <span>실행 결과(1)은 무엇일까요?</span>
+</Callout>
+
+### 함수 선언문과 함수 표현식
+
+**함수 선언문**(function declaration)과 **함수 표현식**(function expression)은 함수를 정의할 때 사용하는 두가지 방식입니다. <br/>
+
+<Tabs items={["함수 선언문", "함수 표현식 (익명 함수)", "함수 표현식 (기명 함수)"]}>
+  <Tabs.Tab >
+    ```js showLineNumbers copy filename="함수 선언문"
+      function a() { }
+      a();
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab >
+    ```js showLineNumbers copy filename="함수 표현식 (익명 함수)"
+      var a = function () { }
+      a();
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab >
+    ```js showLineNumbers copy filename="함수 표현식 (기명 함수)"
+      var a = function b() { }
+      a();
+      b(); // ReferenceError: b is not defined
+    ```
+    <Callout type='error' emoji="🚨">
+      기명 함수 표현식의 경우 외부에서 함수명으로 호출할 수 없습니다.
+    </Callout>
+  </Tabs.Tab>
+</Tabs>
+
+함수 선언문과 함수 표현식은 호이스팅 과정에서 다르게 동작합니다. <br/>
+함수 표현식은 기본적으로 변수에 함수를 할당하는 것이므로, 변수명이 호이스팅되고 함수는 변수에 할당되어야 합니다. <br/>
+반면 함수 선언문은 함수 전체가 호이스팅되기 때문에, 함수 선언문을 코드의 어디에 작성하든 상관없이 함수를 사용할 수 있습니다.
+
+<Callout emoji="🤔">
+  그렇다면, 함수 선언문과 함수 표현식 중 어떤 것을 사용해야 할까요? 또, 이유는 무엇일까요?
+</Callout>
+
