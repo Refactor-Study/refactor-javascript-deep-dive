@@ -1,7 +1,7 @@
 import React from 'react';
 import { DocsThemeConfig, useConfig } from 'nextra-theme-docs';
 import { useRouter } from 'next/router';
-import { Thumbnail, Author } from './components';
+import { Thumbnail, Author, Comments } from './components';
 
 const config: DocsThemeConfig = {
   toc: {
@@ -66,6 +66,7 @@ const config: DocsThemeConfig = {
         )}
         {frontMatter?.image && <Thumbnail src={frontMatter.image} />}
         {children}
+        <Comments />
       </>
     );
   },
