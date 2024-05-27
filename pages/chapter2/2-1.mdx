@@ -18,21 +18,23 @@ image: /images/chapter2/thumbnail_2-1.png
 이 컨텍스트들은 **콜 스택**(Call Stack)에 쌓이며, 가장 위에 있는 컨텍스트가 현재 실행중인 컨텍스트가 됩니다. <br/>
 다음의 예제를 봅시다.
 
-```javascript showLineNumbers copy
-// ------------------------------ (1)
-var a = 1;
+<div id="callstack_example">
+  ```javascript showLineNumbers copy filename="콜 스택"
+  // ------------------------------ (1)
+  var a = 1;
 
-function outer() {
-  function inner() {
-    console.log(a); // undefined
-    var a = 3;
+  function outer() {
+    function inner() {
+      console.log(a); // undefined
+      var a = 3;
+    }
+    inner(); // ------------------ (2)
+    console.log(a); // 1
   }
-  inner(); // ------------------ (2)
+  outer(); // -------------------- (3)
   console.log(a); // 1
-}
-outer(); // -------------------- (3)
-console.log(a); // 1
-```
+  ```
+</div>
 
 위 예제에서는 전역 실행 컨텍스트와 outer 함수 실행 컨텍스트, inner 함수 실행 컨텍스트가 존재합니다. <br/><br/>
 ![call_stack_example](/images/chapter2/call_stack_example.png)

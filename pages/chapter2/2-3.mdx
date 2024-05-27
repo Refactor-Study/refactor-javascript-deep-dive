@@ -1,0 +1,312 @@
+---
+title: 스코프와 스코프 체인
+date: 2024년 5월 27일
+author: 이호연
+image: /images/chapter2/thumbnail_2-3.png
+---
+
+## 스코프(Scope)와 스코프 체인(Scope Chain)
+
+`스코프(Scope)`는 식별자에 대한 유효한 범위를 의미합니다. <br/>
+이러한 스코프를 안쪽에서부터 바깥쪽으로 차례대로 검색해나가는 것을 `스코프 체인(Scope Chain)`이라고 합니다.
+그리고 이것을 가능하게 하는 것이 바로 `렉시컬 환경(Lexical Environment)`의 `Outer Environment Reference`입니다.
+
+## 환경 레코드의 중첩 구조
+
+모든 환경 레코드는 `Outer Environment Reference`를 가지고 있습니다. <br/>
+이것은 현재 환경 레코드의 바깥쪽 환경 레코드를 참조하는 역할을 합니다.
+[예제](/chapter2/2-1#callstack_example)를 통해 살펴보겠습니다.
+
+```js showLineNumbers copy filename="스코프 체인"
+var a = 1;
+var outer = function () {
+  var inner = function () {
+    console.log(a);
+    var a = 3;
+  };
+  inner();
+  console.log(a);
+};
+outer();
+console.log(a);
+```
+
+`Outer Environment Reference`를 객체로 표현하여 나타내면 아래와 같습니다. <br/>
+
+import { Callout, Steps } from 'nextra/components';
+
+<Callout emoji='🚨' type='warning'>
+  Outer Environment Reference는 실제로 존재하는 객체가 아니며, 유저가 직접
+  접근할 수 없습니다. <br /> 이해를 돕기 위해 객체로 표현하였습니다.
+</Callout>
+
+<Steps>
+  ### 시작
+  <div className='flex items-center'>
+    <div className='flex-1'>
+      전역 컨텍스트가 활성화 됩니다.
+      ```js filename="활성화 컨텍스트: GLOBAL"
+      GLOBAL = {
+        OuterEnvironmentReference: null,
+        EnvironmentRecord: {
+          a: undefined,
+          outer: undefined
+        }
+      }
+      ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_1.png)
+    </div>
+  </div>
+
+  ### `var a = 1; var outer = function (){:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+      전역 컨텍스트의 `EnvironmentRecord`에 a와 outer가 저장됩니다.
+      ```js filename="활성화 컨텍스트 : GLOBAL"
+      GLOBAL = {
+        OuterEnvironmentReference: null,
+        EnvironmentRecord: {
+          a: 1,
+          outer: function (){}
+        }
+      }
+      ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_1.png)
+    </div>
+  </div>
+  
+  ### `outer(){:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    outer 함수 실행 컨텍스트가 활성화 됩니다.
+    ```js filename="활성화 컨텍스트: outer"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function (){}
+      }
+    };
+
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+        EnvironmentRecord: {
+        inner: undefined
+      }
+    }
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_2.png)
+    </div>
+  </div>
+  
+  ### `inner(){:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    inner 함수 실행 컨텍스트가 활성화 됩니다.
+    ```js filename="활성화 컨텍스트: inner"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function (){}
+      }
+    };
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+      EnvironmentRecord: {
+        inner: function (){}
+      }
+    };
+    inner = {
+      OuterEnvironmentReference: outer,
+      EnvironmentRecord: {
+        a: undefined
+      }
+    }
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_3.png)
+    </div>
+  </div>
+  
+
+  ### `console.log(a);{:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    inner 함수 실행 컨텍스트에서 a를 찾습니다. <br />
+    현재 활성 상태인 inner 함수의 `EnvironmentRecord`에 a가 발견되었으나, 값이 할당되지 않았기 때문에 `undefined`가 출력됩니다.
+
+    ```js {17} filename="활성화 컨텍스트: inner"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+      EnvironmentRecord: {
+        inner: function () {},
+      },
+    };
+    inner = {
+      OuterEnvironmentReference: outer,
+      EnvironmentRecord: {
+        a: undefined,
+      },
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_3.png)
+    </div>
+  </div>
+
+  ### `var a = 3;{:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    inner 함수 실행 컨텍스트의 `EnvironmentRecord`에 a가 저장됩니다.
+
+    ```js /a: 3/ filename="활성화 컨텍스트: inner"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+      EnvironmentRecord: {
+        inner: function () {},
+      },
+    };
+    inner = {
+      OuterEnvironmentReference: outer,
+      EnvironmentRecord: {
+        a: 3,
+      },
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_3.png)
+    </div>
+  </div>
+  ### `}` (inner 함수 종료)
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    inner 함수 실행 컨텍스트가 콜 스택에서 제거됩니다. 바로 아래의 outer 실행 컨텍스트가 다시 활성화 됩니다. <br />
+    엔진은 7번줄로 이동합니다.
+
+    ```js filename="활성화 컨텍스트: outer"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+      EnvironmentRecord: {},
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_2.png)
+    </div>
+  </div>
+  ### `console.log(a);{:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    outer의 `EnvironmentRecord`에서 a를 찾습니다. <br />
+    현재 활성 상태인 outer 함수의 `EnvironmentRecord`에는 a가 없기 때문에 바깥쪽 환경인 전역 컨텍스트로 이동하여 a를 찾습니다. <br />
+    전역 컨텍스트의 `EnvironmentRecord`에 a가 있으므로 1이 출력됩니다.
+
+    ```js {17} filename="활성화 컨텍스트: outer"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    outer = {
+      OuterEnvironmentReference: GLOBAL,
+      EnvironmentRecord: {},
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_2.png)
+    </div>
+  </div>
+  ### `}` (outer 함수 종료)
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    outer 함수가 종료됩니다. outer 함수가 콜 스택에서 제거되고 바로 아래의 전역 컨텍스트가 다시 활성화 됩니다. <br />
+    엔진은 10번줄로 이동합니다.
+
+    ```js filename="활성화 컨텍스트: GLOBAL"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_1.png)
+    </div>
+  </div>
+  ### `console.log(a);{:js}`
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    전역 컨텍스트의 `EnvironmentRecord`에서 a를 찾습니다. <br />
+    전역 컨텍스트의 `EnvironmentRecord`에 a가 있으므로 1이 출력됩니다.
+
+    ```js {17} filename="활성화 컨텍스트: GLOBAL"
+    GLOBAL = {
+      OuterEnvironmentReference: null,
+      EnvironmentRecord: {
+        a: 1,
+        outer: function () {},
+      },
+    };
+    ```
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_1.png)
+    </div>
+  </div>
+  ### 종료
+  <div className='flex items-center'>
+    <div className='flex-1'>
+    전역 컨텍스트가 콜 스택에서 제거됩니다.
+    </div>
+    <div className='max-w-[200px]'>
+      ![scope_context_1](/images/chapter2/scope_context_4.png)
+    </div>
+  </div>
+</Steps>
+
+## 전역변수와 지역변수
+
+전역변수는 전역 스코프에서 선언된 변수를 의미하며, 어디서든 접근이 가능합니다. <br/>
+예제에서는 전역 스코프에서 선언한 a와 outer가 전역변수에 해당합니다. <br/>
+outer 내부에서 선언한 inner와 inner 내부에서 선언한 a는 지역변수에 해당합니다.
+
+<Callout emoji="🤔">
+  전역변수를 지양해야하는 이유는 뭘까요?
+</Callout>
