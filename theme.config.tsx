@@ -1,17 +1,15 @@
 import React from 'react';
 import { DocsThemeConfig, useConfig } from 'nextra-theme-docs';
 import { useRouter } from 'next/router';
-import { Thumbnail, Author } from './components';
+import { Thumbnail, Author, Comments } from './components';
 
 const config: DocsThemeConfig = {
   toc: {
     title: '목차',
   },
-  editLink: {
-    component: null,
-  },
+  editLink: { text: 'GitHub에서 수정하기' },
   feedback: {
-    content: null,
+    content: <span>문서에 대한 피드백을 남겨주세요.</span>,
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,
@@ -30,7 +28,6 @@ const config: DocsThemeConfig = {
   search: {
     placeholder: '검색...',
   },
-  navigation: false,
   logo: (
     <div className='flex items-center gap-2'>
       <img
@@ -50,7 +47,8 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/refactor-study',
   },
 
-  docsRepositoryBase: 'https://github.com/refactor-study',
+  docsRepositoryBase:
+    'https://github.com/Refactor-Study/refactor-javascript-deep-dive/tree/main',
   footer: {
     text: '2024 © 이호연 All rights reserved.',
   },
@@ -68,6 +66,7 @@ const config: DocsThemeConfig = {
         )}
         {frontMatter?.image && <Thumbnail src={frontMatter.image} />}
         {children}
+        <Comments />
       </>
     );
   },
