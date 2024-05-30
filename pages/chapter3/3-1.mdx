@@ -193,9 +193,9 @@ obj1.outer();
 (2)의 this는 전역 객체를 가리킵니다. <br />
 (3)의 this는 `obj2{:js}`를 가리킵니다. <br />
 
-그림과 함께 코드의 동작을 따라가 볼까요?
-
-# TODO: 설명 추가
+<Callout emoji="🤔">
+  메서드 내부함수에서의 this가 전역 객체를 가리키는 이유는 무엇일까요?
+</Callout>
 
 ### 메서드 내부함수에서의 this를 우회하는 방법
 
@@ -281,3 +281,38 @@ document.body.querySelector("#a")
 이처럼 콜백 함수 내부에서의 this는 호출한 함수에 따라 달라집니다. <br />
 
 ## 5. 생성자 함수 내부에서의 this
+
+생성자 함수는 객체를 생성하는 함수입니다. 객체와 클래스는 [7장](/chapter7/7-1)에서 다루도록 하겠습니다. <br /><br />
+자바스크립트에서는 함수에 생성자로서의 역할을 부여했습니다. `new{:js}` 키워드를 사용하여 함수를 생성자 함수로 호출하면 해당 함수가 생성자로서 동작하게 됩니다. <br />
+그리고 어떤 함수가 생성자 함수로 호출되면, this는 생성자 함수가 생성할 인스턴스를 가리킵니다. <br /><br />
+
+자바스크립트에서 인스턴스가 만들어지는 과정은 다음과 같습니다.
+  1. 생성자 함수 호출
+  2. 생성자의 prototype 프로퍼티를 참조하는 __proto__라는 프로퍼티를 가진 빈 객체 생성
+  3. 생성자 함수 내부의 this에 빈 객체를 바인딩
+  4. 인스턴스 생성
+예제로 확인해봅시다.
+
+```javascript showLineNumbers copy filename="생성자 함수"
+var Cat = function (name, age) {
+  this.bark = '야옹';
+  this.name = name;
+  this.age = age;
+};
+
+var choco = new Cat('초코', 7);
+var nabi = new Cat('나비', 5);
+console.log(choco, nabi);
+
+/** 결과
+ * Cat { bark: '야옹', name: '초코', age: 7 }
+ * Cat { bark: '야옹', name: '나비', age: 5 }
+ */
+```
+
+`Cat`이라는 변수에 익명 함수를 할당했습니다. 이 함수는 `name{:js}`과 `age{:js}`를 인자로 받아 `this{:js}`에 `bark{:js}`, `name{:js}`, `age{:js}`를 할당합니다. <br />
+`new{:js}` 키워드를 사용하여 `Cat` 함수를 호출하면 `this{:js}`는 빈 객체를 가리키게 됩니다. <br />
+이후 `this{:js}`에 `bark{:js}`, `name{:js}`, `age{:js}`를 할당하고, 이를 반환합니다. <br />
+이렇게 생성된 인스턴스는 `choco{:js}`, `nabi{:js}`에 할당되어 출력됩니다. <br />
+
+즉 6번 줄에서 실행한 생성자 내부에서의 this는 `choco{:js}`를 가리키고, 7번 줄에서 실행한 생성자 내부에서의 this는 `nabi{:js}`를 가리킵니다. <br />
