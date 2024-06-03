@@ -1,6 +1,7 @@
 ---
 title: 명시적으로 this를 바인딩하는 방법
 date: 2024년 6월 2일
+image: /images/chapter3/thumbnail_3-2.png
 author: 지우진
 ---
 
@@ -35,7 +36,8 @@ Function.prototype.apply(thisArg[, argsArray])
 import { Callout } from 'nextra/components';
 
 <Callout emoji='🤔'>
-  **유사배열객체**란 키가 0이상의 정수인 프로퍼티가 존재하고 length 프로퍼티의 값이 0 또는 양의 정수인 객체입니다.
+  **유사배열객체**란 키가 0이상의 정수인 프로퍼티가 존재하고 length 프로퍼티의
+  값이 0 또는 양의 정수인 객체입니다.
 </Callout>
 
 ```javascript showLineNumbers copy filename="유사배열객체의 배열 메서드 사용"
@@ -43,9 +45,9 @@ var obj = {
   0: 'a',
   1: 'b',
   2: 'c',
-  length: 3
-}
-Array.prototype.push.call(obj, 'd') // Add 'd' to obj
+  length: 3,
+};
+Array.prototype.push.call(obj, 'd'); // Add 'd' to obj
 var arr = Array.prototype.slice.call(obj); // copy obj to array
 ```
 
@@ -61,10 +63,10 @@ var obj = {
   0: 'a',
   1: 'b',
   2: 'c',
-  length: 3
+  length: 3,
 };
 var arr = Array.from(obj);
-console.log(arr);  // ['a', 'b', 'c']
+console.log(arr); // ['a', 'b', 'c']
 ```
 
 ### 생성자 내부에서 다른 생성자 호출
@@ -119,17 +121,17 @@ Function.prototype.bind(thisArg[, arg1[, arg2[, ...]]])
 `bind{:js}`는 ES5에서 추가된 기능으로, `call{:js}`와 비슷하지만 함수를 즉시 호출하지 않고 넘겨받은 `this{:js}` 및 인수들을 바탕으로 새로운 함수를 반환하는 메서드입니다.
 
 ```javascript showLineNumbers copy filename="bind메서드의 활용"
-var func = function(a,b,c,d) {
+var func = function (a, b, c, d) {
   console.log(this, a, b, c, d);
-}
-func(1,2,3,4); // Window 1 2 3 4
+};
+func(1, 2, 3, 4); // Window 1 2 3 4
 
-var bindFunc1 = func.bind({ x:1 });
-bindFunc1(5,6,7,8); // { x:1 } 5 6 7 8
+var bindFunc1 = func.bind({ x: 1 });
+bindFunc1(5, 6, 7, 8); // { x:1 } 5 6 7 8
 
-var bindFunc2 = func.bind({ x:1 }, 4, 5);
-bindFunc2(6,7); // { x:1 } 4 5 6 7
-bindFunc2(8,9); // { x:1 } 4 5 8 9
+var bindFunc2 = func.bind({ x: 1 }, 4, 5);
+bindFunc2(6, 7); // { x:1 } 4 5 6 7
+bindFunc2(8, 9); // { x:1 } 4 5 8 9
 ```
 
 다시 새로운 함수를 호출할 때 인수를 넘기면 그 인수들은 기존 `bind{:js}` 메서드를 호출할 때 전달했던 인수들의 뒤에 이어서 등록됩니다.<br />
@@ -146,23 +148,23 @@ bindFunc2(8,9); // { x:1 } 4 5 8 9
 ```javascript showLineNumbers copy filename="this를 내부함수에 전달하기"
 var obj = {
   outer: function () {
-    console.log(this);              // outer
-      var innerFunc = function () {
-        console.log(this);          // outer
+    console.log(this); // outer
+    var innerFunc = function () {
+      console.log(this); // outer
     };
     innerFunc.call(this);
-  }
+  },
 };
 obj.outer();
 
 var obj = {
   outer: function () {
-    console.log(this);              // outer
+    console.log(this); // outer
     var innerFunc = function () {
-      console.log(this);            // outer
+      console.log(this); // outer
     }.bind(this);
     innerFunc();
-  }
+  },
 };
 obj.outer();
 ```
@@ -179,10 +181,10 @@ var obj = {
   },
   logThisLater2: function () {
     setTimeout(this.logThis.bind(this), 1000);
-  }
+  },
 };
-obj.logThisLater1();      // Window
-obj.logThisLater2();      // logThis
+obj.logThisLater1(); // Window
+obj.logThisLater2(); // logThis
 ```
 
 ## 화살표 함수의 예외사항
@@ -192,14 +194,14 @@ ES6에서 새롭게 도입된 화살표 함수는 실행 컨텍스트 생성 시
 ```javascript showLineNumbers copy filename="화살표 함수의 this"
 var obj = {
   outer: function () {
-    console.log(this);              // outer
+    console.log(this); // outer
     var innerFunc = () => {
-      console.log(this);          // outer
+      console.log(this); // outer
     };
     innerFunc();
-  }
+  },
 };
-obj.outer();   // outer
+obj.outer(); // outer
 ```
 
 ## 별도의 인자로 this를 받는 경우(콜백 함수 내에서의 this)
@@ -211,7 +213,7 @@ obj.outer();   // outer
 var report = {
   sum: 0,
   count: 0,
-  add: function() {
+  add: function () {
     var args = Array.prototype.slice.call(arguments);
     args.forEach(function (entry) {
       this.sum += entry;
@@ -220,7 +222,7 @@ var report = {
   },
   average: function () {
     return this.sum / this.count;
-  }
+  },
 };
 report.add(60, 85, 95);
 console.log(report.sum, report.count, report.average()); // 240 3 80
