@@ -35,7 +35,7 @@ Function.prototype.apply(thisArg[, argsArray])
 
 import { Callout } from 'nextra/components';
 
-<Callout emoji='🤔'>
+<Callout emoji='💡' type='info'>
   **유사배열객체**란 키가 0이상의 정수인 프로퍼티가 존재하고 length 프로퍼티의
   값이 0 또는 양의 정수인 객체입니다.
 </Callout>
@@ -108,7 +108,7 @@ const min = Math.min(...numbers);
 
 참고로 ES6에서는 펼치기 연산자로 간단하게 작성 가능합니다.
 
-<Callout emoji='❗'>
+<Callout emoji='💡' type='info'>
   `call{:js}`, `apply{:js}` 메서드는 명시적으로 별도의 `this{:js}`를 바인딩하면서 함수 또는 메서드를 실행하는 좋은 방법이지만 오히려 이로 인해 `this{:js}`를 예측하기 어렵게 만들어 코드 해석을 방해한다는 단점이 있습니다. 그럼에도 불구하고 ES5이하의 환경에서는 마땅한 대안이 없어서 실무에서 광범위하게 사용됩니다.
 </Callout>
 
