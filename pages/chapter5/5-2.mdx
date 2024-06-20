@@ -11,6 +11,8 @@ author: 임재도
 
 ## 클로저에서 메모리 누수?
 
+import { Callout } from 'nextra/components';
+
 <Callout emoji="🤔">
   생각해봅시다.
   <ul className='list-inside'>
@@ -45,6 +47,8 @@ author: 임재도
 
 ## 코드를 통한 이해
 코드를 통해서 이해해봅시다.
+
+import { Tabs } from 'nextra/components';
 
 <Tabs items={['1. return에 의한 메모리 해제', '2. setInterval에 의한 메모리 해제', '3. eventListener에 의한 클로저의 메모리 해제']}>
   <Tabs.Tab>
