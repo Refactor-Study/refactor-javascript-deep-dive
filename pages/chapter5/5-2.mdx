@@ -1,0 +1,103 @@
+---
+title: 클로저와 메모리 관리
+date: 2024년 6월 20일
+image: /images/chapter3/thumbnail_5-2.png
+author: 임재도
+---
+
+`클로저(Closure)`는 객체지향과 함수형 모두를 아우르는 매우 중요한 개념입니다.<br />
+이를 사용할 때 `메모리 누수`등의 이유로 사용을 조심하거나 지양하라는 말이 종종 보입니다. <br />
+이에 대해서 한번 알아볼까요? <br />
+
+## 클로저에서 메모리 누수?
+
+<Callout emoji="🤔">
+  생각해봅시다.
+  <ul className='list-inside'>
+    <li>메모리 누수가 뭘까요?</li>
+  </ul>
+</Callout>
+
+`메모리 누수`란 개발자의 의도와 달리 어떤 값의 참조 카운트가 0이 되지 않아 `가비지컬렉터(GC: Garbage Collector)`의 수거 대상이 되지 않는 경우를 말합니다.<br />
+즉, <span className='font-bold'>개발자가 의도적으로 참조 카운트를 0이 되지 않게 설정하는 경우</span>에는 누수라고 할 수 없습니다. <br />
+
+과거에는 의도치 않게 누수가 발생하는 상황들(순환 참조, 인터넷 익스플로러의 이벤트 핸들러 등)이 여럿 존재했지만, 최근에 와서는 대부분 JS 엔진에서 발생하지 않거나 거의 보이지 않습니다.<br />
+이에 따라서, `메모리 소모`에 대한 관리법만 잘 파악해서 사용하면 큰 문제는 없을 것입니다. <br />
+
+## 메모리 소모를 어떻게 관리할까?
+`클로저(Closure)`는 어떤 필요에 의해 의도적으로 함수의 지역변수를 메모리를 소모하도록 함으로써 발생합니다. <br />
+그렇다면 그 필요성이 사라진 시점에 더는 메모리를 소모하지 않게 해주면 됩니다. <br />
+
+쉽게 생각하면 `c`언어에서 `file open`을 하면 반드시 `file close`를 해주는 것과 유사한 원리라고 생각하시면 됩니다. <br />
+
+참조카운트를 0으로 만들면 언젠가 `가비지 컬렉터`에 의해 회수될 것이기 때문에, 이를 신경써서 관리해주면 됩니다. <br />
+
+<Callout emoji="🤔">
+  생각해봅시다.
+  <ul className='list-inside'>
+    <li>어떻게 참조 카운트를 0으로 만들 수 있을까요?</li>
+  </ul>
+</Callout>
+
+위에 대한 답이 곧 `메모리 소모 관리`의 답입니다. <br />
+
+<span className='font-bold'>식별자에 참조형이 아닌 기본형 데이터(보통 null이나 undefined)를 할당</span>하면 됩니다.
+
+## 코드를 통한 이해
+코드를 통해서 이해해봅시다.
+
+<Tabs items={['1. return에 의한 메모리 해제', '2. setInterval에 의한 메모리 해제', '3. eventListener에 의한 클로저의 메모리 해제']}>
+  <Tabs.Tab>
+    ```js showLineNumbers copy filename="return에 의한 메모리 해제" {10}
+      var outer = (function() {
+        var a = 1;
+        var inner = function () {
+          return ++a;
+        };
+        return inner;
+      })();
+      console.log(outer());
+      console.log(outer());
+      outer = null;                 // outer 식별자의 inner함수 참조를 끊음
+    ```
+    10번째 줄에서 outer 식별자의 inner 함수 참조를 끊고 있습니다.
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ```js showLineNumbers copy filename="setInterval에 의한 메모리 해제" {7}
+      (function () {
+        var a = 0;
+        var intervalId = null;
+        var inner = function () {
+          if (++a >= 10) {
+            clearInterval(intervalId);
+            inner = null;           // inner 식별자의 함수 참조를 끊음
+          }
+          console.log(a);
+        };
+      })();
+    ```
+    7번째 줄에서 inner 식별자의 함수 참조 자체를 끊고 있습니다.
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ```js showLineNumbers copy filename="eventListener에 의한 클로저의 메모리 해제" {10}
+      (function() {
+        var count = 0;
+        var button = document.createElement('button');
+        button.innerText = 'click';
+
+        var clickHandler = function () {
+          console.log(++count, 'times clicked');
+          if (count >= 10) {
+            button.removeEventListener('click', clickHandler);
+            clickHandler = null;             // clickHandler 식별자의 함수 참조를 끊음
+          }
+        };
+        button.addEventListener('click', clickHandler);
+        document.body.appendChild(button);
+      })();
+    ```
+    10번째 줄에서 clickHandler 식별자의 함수 참조 자체를 끊고 있습니다.
+  </Tabs.Tab>
+</Tabs>
