@@ -10,5 +10,6 @@
   "chapter1": "01 데이터 타입",
   "chapter2": "02 실행 컨텍스트",
   "chapter3": "03 this",
-  "chapter4": "04 콜백함수"
+  "chapter4": "04 콜백함수",
+  "chapter5": "05 클로저"
 }
