@@ -1,0 +1,85 @@
+---
+title: 클로저의 의미 및 원리 이해
+date: 2024년 6월 20일
+image: /images/chapter3/thumbnail_5-1.png
+author: 임재도
+---
+
+`클로저(Closure)`, JS를 초급자를 넘어서 깊이 사용하다보면 자주 접하게 되는 용어입니다.
+보통 코드 은닉 등에서 많이 활용하곤 하는데, 과연 여러분은 그 원리를 제대로 이해하고 계신가요?
+같이 한번 클로저의 세계로 다이빙 해봅시다!
+
+## 클로저(Closure)의 어원은?
+영어에서 `클로저(Closure)`말은 정말 다양하게 쓰이고 있습니다.
+
+네이버 사전에서 검색을 해보면 다음과 같은 뜻이 있죠.
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>Closure</emp>
+  <ol className='list-decimal'>
+    <li className='flex flex-row gap-1'>
+      <div>1.</div>
+      <div className='bg-blue-200 px-[2px]'>명사</div>
+      <span>(공장·학교·병원 등의 영구적인) 폐쇄(되는 상황)</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>2.</div>
+      <div className='bg-blue-200 px-[2px]'>명사</div>
+      <span>(도로·교량의 일시적) 폐쇄</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>3.</div>
+      <div className='bg-blue-200 px-[2px]'>명사</div>
+      <span>(힘든 일의) 종료\[종결\]</span>
+    </li>
+  </ol>
+</Callout>
+
+즉, 보통은 `Close`의 명사형으로써 `폐쇄`, `종료`, `끝`, `닫힘` 등의 의미로 쓰인다는 것을 볼 수 있죠.
+
+이걸 기억하고 보시면 클로저가 상당히 어렵게 다가옵니다. JS에서 클로저의 어원은 위에 기반한 것이 아니라, 수학과 컴퓨터 과학에서 `폐합`을 의미하는 `Closure`에서 유래되었기 때문이죠.
+`폐합`은 보통 `~~에 닫혀있다` 라는 표현으로 많이 쓰입니다.
+
+예를 들어서, `정수 집합은 덧셈 연산에 대해 닫혀있다.` 혹은 `정수 집합은 덧셈 연산에 대해 폐합을 가진다.` 와 같은 표현으로 쓰입니다.
+
+![closure_mean_1](/images/chapter5/closure_mean_1.png) <br/>
+![closure_mean_2](/images/chapter5/closure_mean_2.png) <br/>
+
+위와 같은 그림을 보시면 아시겠지만, `정수(Integer)` 연산의 경우를 보면, `사칙연산(+,-,*,/)`를 해도 그 결과 값은 정수 집합에 다시 해당하게 됩니다.
+
+즉, 어떤 행위의 결과가 자신의 집합으로 귀결되는 것을 `Closure`라고 합니다.
+
+## JS에서의 클로저(Closure)는 어떻게 표현되는가?
+그러면 저희가 사용하는 js에서의 클로저도 한번 생각해볼까요?
+
+![closure_graph_1](/images/chapter5/closure_graph_1.png) <br/>
+
+JS에서 클로저를 그림으로 그리면 위와 같이 표현할 수 있습니다.
+`outer`함수 내부에 있는 `inner`함수가 `outer`함수 외부에서 `outer`함수 `범위(scope)`안에 있는 `변수 a`를 참조하는 것이지요.
+
+말이 어렵죠? 당장은 이해하지 않으셔도 됩니다.
+
+이제부터 차근차근 알아보면서 단계별로 이해를 하고, 다시금 이 그림을 살펴보는 과정을 통해 함께 이해해봅시다!
+
+## 클로저(Closure)를 다른 사람들은 어떻게 표현하고 있는가?
+`클로저(Closure)`는 사실 자바스크립트의 고유의 개념이 아닙니다.
+여러 `함수형 프로그래밍 언어`에서 등장하는 `보편적인 특성`입니다!
+
+자바스크립트의 고유 개념이 아니다보니 `ECMAScript` 명세에서도 클로저의 정의를 다루지 않고 있습니다.
+이것 때문만은 아니지만, 다양한 문헌에서 제각각 클로저를 다르게 정의하고 있습니다.
+또한, 클로저를 설명하는 문장 자체도 이해하기 어려운 단어가 등장하는 경우가 많아, 이를 보고 한번에 클로저가 무엇이다 이해하기는 어렵습니다.
+
+그렇지만, 식견을 넓히기 위해서, 그리고 감을 잡기 위해서 한번 살펴볼까요?
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>다양한 책들에서의 클로저(Closure) 표현</emp>
+  <ul className='list'>
+    <li className='flex flex-row gap-1'>
+      <span>자신을 내포하는 함수의 컨텍스트에 접근할 수 있는 함수</span>
+      <span>- 더글라스 크록포드, <span className='font-bold'>&lt;&lt;자바스크립트 핵심 가이드&gt;&gt;</span></span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <span>자신을 내포하는 함수의 컨텍스트에 접근할 수 있는 함수</span>
+      <span>- 더글라스 크록포드, <span className='font-bold'>&lt;&lt;자바스크립트 핵심 가이드&gt;&gt;</span></span>
+    </li>
+  </ul>
+</Callout>
