@@ -155,6 +155,7 @@ var instance = new Constructor();
 위 코드를 바탕으로 구체적으로 바꾸면 아래와 같이 표현이 가능합니다. <br />
 
 ![prototype](/images/chapter6/prototype4.png)
+- 출처 : 코어자바스크립트 교재 148페이지 그림 6-2
 
 `Constructor.prototype`과 `instace.__proto__`의 관계를 도식화한 것입니다. <br />
 왼쪽 위 꼭짓점에는 `Constructor`를, 오른쪽 위 꼭짓점에는 `Constructor.prototype`을 도식화 했으며, <br />
@@ -207,7 +208,6 @@ let suzi = new Person('suzi');
 suzi.__proto__.getName(); // undefined
 ```
 ![prototype](/images/chapter6/prototype7.png)
-- 출처 : 코어자바스크립트 교재 148페이지 그림 6-2
 
 그리고 이 생성자 함수를 이용해서 객체를 생성했을 때, `__proto__`를 이용해서 똑같이 사용할 수 있습니다. <br />
 참고로 값에 `undefined`라고 할당된 것은 생각하지 맙시다. <br />
