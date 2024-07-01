@@ -23,6 +23,7 @@ author: 임재도
 |![prototype](/images/chapter6/prototype1.webp) <br/>|![prototype](/images/chapter6/prototype2.webp) <br/>|
 |--|--|
 |출처 : 터미네이터 시리즈|출처 : 에반게리온|
+
 <br />
 어릴 적 만화, 영화 등을 좋아해서 그런지, 특정 기능을 수행하고 테스트할 수 있게 만든 일종의 뼈대가 떠오릅니다.<br />
 혹은, 무언가를 만드는 과정에서 시험용으로 미리 만들어보는 것이 떠오르기도 합니다. <br />
@@ -206,6 +207,7 @@ let suzi = new Person('suzi');
 suzi.__proto__.getName(); // undefined
 ```
 ![prototype](/images/chapter6/prototype7.png)
+- 출처 : 코어자바스크립트 교재 148페이지 그림 6-2
 
 그리고 이 생성자 함수를 이용해서 객체를 생성했을 때, `__proto__`를 이용해서 똑같이 사용할 수 있습니다. <br />
 참고로 값에 `undefined`라고 할당된 것은 생각하지 맙시다. <br />
@@ -443,3 +445,8 @@ Object.getPrototypeOf([instance]).constructor
 [instance]
 Object.getPrototypeOf([instance])
 ```
+
+![prototype](/images/chapter6/prototype13.png)
+- 출처 : 코어자바스크립트 교재 147페이지 그림 6-5
+
+그리고 이런 관계는 위와 같이 도식도로 표현할 수 있습니다. <br />
