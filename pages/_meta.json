@@ -11,5 +11,6 @@
   "chapter2": "02 실행 컨텍스트",
   "chapter3": "03 this",
   "chapter4": "04 콜백함수",
-  "chapter5": "05 클로저"
+  "chapter5": "05 클로저",
+  "chapter6": "06 프로토타입"
 }

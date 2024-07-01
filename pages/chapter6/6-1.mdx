@@ -1,0 +1,445 @@
+---
+title: 프로토타입의 이해
+date: 2024년 7월 01일
+image: /images/chapter6/thumbnail_6-1.png
+author: 임재도
+---
+
+최근의 자바스크립트는 완전하지는 않지만 `객체지향`, `절차 지향`, `함수형 프로그램` 등의 페러다임을 사용해서 개발을 할 수 있습니다. <br />
+그러나, 자바스크립트의 원래 설계에서는 `Prototype` 형식의 언어 페러다임을 바탕으로 만들어졌습니다. <br />
+자바스크립트의 근간이 되는 `Prototype`이 무엇인지 같이 한번 알아볼까요? <br />
+
+## 🚀프로토타입?
+
+### 📕 일상 생활에서의 프로토타입
+
+프로토타입을 처음 들어보는 분도 계실테지만, 몇 번 들어봤지만 머릿 속에 정리가 되지 않아 혼동을 빚는 분도 계실 것입니다. <br />
+개념을 이해하는 데 어려움이 있다면, 아마 일상생활에서 사용하는 `프로토타입(prototype)`의 개념과 `객체 지향(Object Oriented Programming)`의 개념이 혼재되어 혼란이 생겼을 가능성이 높습니다. <br />
+객체지향과는 엄연히 다른데, 객체지향을 을 먼저 떠올리면서 프로토타입을 본다면 '이게 왜 이렇게 동작하지?' 라는 생각부터 온갖 혼란이 생기기 마련입니다. <br />
+<br/>
+저 역시도, 이런 개념에서 큰 혼란이 있었고, 용어를 명확히 하는 데에서 시작하는게 본 개념을 이해하는데 큰 도움이 될 것이라 생각합니다. 함께 살펴봅시다. <br /> <br />
+여러분 프로토타입! 하면 뭐가 먼저 떠오르시나요? <br />
+
+|![prototype](/images/chapter6/prototype1.webp) <br/>|![prototype](/images/chapter6/prototype2.webp) <br/>|
+|--|--|
+|출처 : 터미네이터 시리즈|출처 : 에반게리온|
+<br />
+어릴 적 만화, 영화 등을 좋아해서 그런지, 특정 기능을 수행하고 테스트할 수 있게 만든 일종의 뼈대가 떠오릅니다.<br />
+혹은, 무언가를 만드는 과정에서 시험용으로 미리 만들어보는 것이 떠오르기도 합니다. <br />
+<br />
+
+import { Callout } from 'nextra/components';
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>Prototype</emp>
+  <ol className='list-decimal'>
+    <li className='flex flex-row gap-1'>
+      <div>1.</div>
+      <span>오리지널, 또는 기반이 된 모델</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>2.</div>
+      <span>대표적으로 제시할 수 있는 예가 되는 모델</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>3.</div>
+      <span>종류의 기초가 되는 모델</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>4.</div>
+      <span>앞서 제작된 모델</span>
+    </li>
+  </ol>
+</Callout>
+
+나무위키에서 가져온 내용입니다. <br />
+일반적으로 양산형으로 제작작되기 전에 미리 제작해보는 모델이라고 생각할 수 있습니다. <br />
+이 개념을 기억하고, 이제 자바스크립트의 세계로 들어가봅시다! <br />
+
+### 📕 프로토타입 기반 프로그래밍
+`페러다임(Paradigm)`은 프로그래밍 언어의 설계와 사용에 대한 근본적인 접근 방식을 의미합니다. <br />
+저희가 흔히 말하는 객체 지향, 절차지향, 함수형 프로그램은 모두 일종의 페러다임이지요. <br />
+`프로토타입 기반 프로그래밍` 역시 하나의 페러다임입니다. <br />
+프로그래밍 언어 설계와 관련된 철학이자, 이 언어를 사용하기 위해 고려해야하는 근본적인 생각인 것이지요. <br />
+
+<br />
+
+import { Tabs } from 'nextra/components';
+
+<Tabs items={['1. 생각해봅시다', '2. 정답']}>
+  <Tabs.Tab>
+    <Callout emoji="🤔">
+      생각해봅시다!
+      <ul className='list-inside'>
+        <li>프로토타입은 객체지향인가?</li>
+      </ul>
+    </Callout>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    <Callout emoji='💡' type='info'>
+      <emp className='font-bold'>프로토타입과 객체지향</emp>
+      <ol className='list'>
+        <li>개념적으로는 프로토타입은 객체지향이 맞습니다. <br/> SOLID 원칙을 엄밀하게 지키지는 않지만, 객체 지향 페러다임이 성립하기 위한 4가지 원칙(`캡슐화-Encapsulation`, `상속-Inheritance`, `다형성-Polymorphism`, `추상화-Abstraction`)을 만족하기 때문입니다. <br />객체지향 프로그래밍은 다양한 접근 방식을 포함하는 넓은 개념이기에, 클래스 기반 프로그래밍과 프로토타입 기반 프로그래밍은 모두 객체 지향의 범주에 속합니다.</li>
+      </ol>
+    </Callout>
+  </Tabs.Tab>
+</Tabs>
+
+즉, 자바스크립트는 객체 지향에 기반하고 있으나, 그 구현 방법으로 클래스를 통해 구현하는 방식을 선택하지 않고 프로토타입을 바탕으로 구현하는 방식을 선택했다고 이해하시면 됩니다. <br />
+
+<br />
+
+
+<Callout emoji="🤔">
+  생각해봅시다!
+  <ul className='list-inside'>
+    <li>자바스크립트는 왜 굳이 프로토타입 방식을 선택하였는가?</li>
+  </ul>
+</Callout>
+
+
+그러면 한가지 의문이 들지 않으신가요? 자바스크립트는 왜 굳이 클래스 기반이 아닌 프로토타입 기반의 언어로 설계를 했을까요? <br />
+이름에서 알 수 있듯 이미 만들어질 당시에 `Java`라는 훌륭한 언어가 있어서 참조할 수 있었음에도 말입니다. <br />
+
+<br />
+
+이는 자바스크립트의 역사를 살펴보면 쉽게 이해할 수 있습니다. <br />
+자바스크립트는 1995년에 넷스케이프(Netscape) 커뮤니케이션즈의 브렌던 아이크(Brendan Eich)에 의해 개발이 되었습니다. <br />
+1990년대 초반 웹은 주로 정적인 HTML 페이지로 구성되어 있었습니다. <br />
+이러한 정적인 웹 페이지는 사용자의 상호작용을 제한적으로 지원했죠. <br /><br />
+점점 웹이 대중화 되면서 사용자와 상호작용이 가능한 동적 페이지가 필요했습니다. <br />
+사용자의 입력을 처리하고, 페이지를 동적으로 업데이트할 수 있는 기능이 요구되었죠. <br /><br />
+동시에 당시 넷스케이프는 MS의 인터넷 익스플로러(Internet Explorer)와 경쟁하고 있었습니다. <br />
+이 경쟁에서 우위를 점하기 위해 <strong>브라우저에서 실행</strong>되는 `스크립팅 언어`가 필요했습니다. <br />
+
+<br />
+이런 배경에서 브렌던 아이크가 10일 만에 개발한 언어가 자바스크립트입니다.<br /><br />
+
+앞서 살펴본 `this`바인딩에서의 오류도 10일만에 개발이 되었기에 발생한 일입니다.<br /> <br />
+
+위의 역사를 알고 있으면 아래의 내용이 쉽게 받아들여질 것입니다. <br />
+
+### 📕 자바스크립트가 프로토타입 구현 방법을 채택한 이유
+|특징|내용|
+|--|--|
+|빠른 개발 시간|자바스크립트는 1995년에 Brendan Eich에 의해 10일 만에 개발되었습니다. 제한된 시간 내에 언어를 완성하기 위해, 상대적으로 구현이 간단한 프로토타입 기반의 객체 모델을 선택했습니다. 클래스 기반 객체 지향 모델보다 프로토타입 기반 모델이 구현하기 더 간단합니다.|
+|단순함과 유연성|자바스크립트는 처음부터 웹 브라우저에서 실행되는 스크립팅 언어로 설계되었습니다. 간단한 문법과 동적 타이핑, 그리고 유연한 객체 모델을 통해 웹 페이지의 동작을 쉽게 조작할 수 있도록 하기 위해 프로토타입 기반 객체 지향을 선택했습니다.|
+|객체 지향의 대안적 접근|자바스크립트는 클래스가 아닌 프로토타입을 통해 객체 지향 프로그래밍을 구현합니다. 이는 개발자에게 객체와 상속 구조를 보다 유연하게 다룰 수 있는 방법을 제공합니다. 자바스크립트의 프로토타입 상속은 객체를 직접 복사하거나 확장하는 방식으로 동작하므로, 클래스 기반 상속보다 덜 경직된 구조를 가질 수 있습니다.|
+|언어의 발전과 상호 운용성|자바스크립트는 웹의 중심에서 다양한 브라우저와 환경에서 실행되어야 했습니다. 프로토타입 기반 모델은 다른 객체 지향 언어와 상호 운용성을 유지하면서도 자바스크립트만의 독특한 장점을 제공할 수 있었습니다.|
+|초기 목표와 철학|자바스크립트는 초기 목표가 초보자도 쉽게 사용할 수 있는 언어가 되는 것이었습니다. 프로토타입 기반 객체 모델은 사용자가 빠르게 객체를 만들고 조작할 수 있게 하며, 복잡한 클래스 정의 없이도 객체 지향 프로그래밍의 많은 장점을 제공할 수 있었습니다.|
+
+위의 요소들 덕분에 자바스크립트는 다음과 같은 특징을 갖습니다. <br />
+
+- 높은 접근성 : 배우기 쉽고, 웹에 쉽게 이식할 수 있다.
+- 경량 스크립팅 언어 : 자바스크립트는 경량 언어로 설계되어, HTML과 쉽게 통합되고 브라우저에서 빠르게 실행될 수 있다.
+- 프로토타입 기반 객체 지향 : 클래스 기반이 아닌 프로토타입 기반의 객체 지향 모델을 채택하여 유연성을 제공한다.
+- 인터프리터 언어 : 자바스크립트는 인터프리터 방식으로 실행되므로, 웹 페이지에 쉽게 삽입되어 즉시 실행될 수 있다.
+
+## 🚀 프로토타입 개념 이해
+
+편의를 위해 프로토타입 기반 프로그래밍을 프로토타입이라고 표현하도록 하겠습니다.
+
+![prototype](/images/chapter6/prototype3.png)
+- 출처 : 코어자바스크립트 교재 147페이지 그림 6-1
+
+책에 나온 그림입니다. 사실, 프로토타입은 이 그림으로부터 전체 구조를 머리에 그릴 수 있으면, 이를 이해하면 끝입니다! <br />
+
+위 그림은 아래의 내용을 추상화한 것입니다.
+
+```javascript
+var instance = new Constructor();
+```
+
+위 코드를 바탕으로 구체적으로 바꾸면 아래와 같이 표현이 가능합니다. <br />
+
+![prototype](/images/chapter6/prototype4.png)
+
+`Constructor.prototype`과 `instace.__proto__`의 관계를 도식화한 것입니다. <br />
+왼쪽 위 꼭짓점에는 `Constructor`를, 오른쪽 위 꼭짓점에는 `Constructor.prototype`을 도식화 했으며, <br />
+왼쪽 아래 꼭짓점에는 `instance`를, 오른쪽 아래 꼭짓점에는 `instance.prototype`을 도식화한 것입니다. <br />
+<br />
+이를 따라가면 아래와 같이 표현가능합니다. <br />
+<br />
+
+- 어떤 `생성자 함수(Constructor)`를 `new` 연산자와 함께 호출하면
+- `Constructor`에서 정의된 내용을 바탕으로 새로운 `인스턴스(Instance)`가 생성된다.
+- 이때, `instance`에는 `__proto__`라는 프로퍼티가 자동으로 부여된다.
+- 이 프로퍼티는 `Constructor`의 `prototype`이라는 프로퍼티를 참조한다.
+
+<br />
+
+여기서 `prototype`은 객체이며, `__proto__` 역시 객체입니다.  <br />
+<br />
+그리고 저희가 지난 시간까지 봐 왔듯이, `prototype`객체 내부에는 인스턴스가 사용할 메서드가 저장이 됩니다. <br />
+어떻게 보면 클레스 표현식에서 메서드를 모아놓았다고 볼 수 있겠네요. <br />
+
+![prototype](/images/chapter6/prototype5.png)
+
+<br />
+
+위의 그림이 보이시나요? `prototype`과 `__proto__`라는 프로퍼티 간의 관계가 포로토타입 개념의 핵심입니다. <br />
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>참고</emp>
+  <ol className='list'>
+    <li>ES5.1 명세에는 `__proto__`가 아니라 `[[prototype]]`이라는 명칭으로 정의돼 있습니다.<br />`__proto__`라는 프로퍼티는 사실 브라우저들이 `[[prototype]]`을 구현한 대상에 지나지 않았습니다.<br />또한, `instance.__proto__`와 같은 방식으로 직접 접근하는 것은 허락하지 않고, 오직 `Object.getPrototypeOf(instance)` 혹은 `Reflect.getPrototypeOf(instance)`를 통해서만 접근할 수 있도록 정의했습니다.</li>
+    <li>그러나 이런 명세에도 불구하고, 브라우저는 `__proto__`에 직접 접근하는 방식을 기능에 계속 넣어 왔고, 이에 따라 ES6에서 레거시 차원에서 정식으로 인정했습니다. <br />그러나 권장되는 방식이 아니기에, 실무에서는 가급적 `__proto__`를 사용하지 않기를 권장합니다.</li>
+    <li>`Object.getPrototypeOf()` 혹은 `Object.create()`를 이용하는 것을 권장한다고 합니다.</li>
+  </ol>
+</Callout>
+
+### 📕 예시를 통해 이해하기
+```javascript
+var Person = function (name) {
+  this._name = name;
+};
+Person.prototype.getName = function() {
+  return this._name;
+};
+```
+
+`Person`이라고 하는 생성자 함수의 `prototype`에 `getName`이라는 메서드를 지정했습니다. <br/>
+
+```javascript
+let suzi = new Person('suzi');
+suzi.__proto__.getName(); // undefined
+```
+![prototype](/images/chapter6/prototype7.png)
+
+그리고 이 생성자 함수를 이용해서 객체를 생성했을 때, `__proto__`를 이용해서 똑같이 사용할 수 있습니다. <br />
+참고로 값에 `undefined`라고 할당된 것은 생각하지 맙시다. <br />
+여기서 핵심은 함수가 실행이 되었다는 것입니다. <br />
+만약 함수가 존재하지 않는다면 다음과 같이 보여지게 됩니다. <br />
+
+![prototype](/images/chapter6/prototype6.png)
+
+위와 같이 에러가 발생하게 되죠.<br />
+즉, 여기서 우리는 별도로 `__proto__`에 `getName()`를 할당하지 않았음에도, `prototype`에 `getName()`을 할당하는 것만으로도 사용이 가능하다는 데 주목하면 됩니다. <br />
+이를 통해 우리는 `prototype`에 어떤 것을 넣으면 그 인스턴스는 `__proto__`에서 적용하면 되는 것이지요. <br />
+<br />
+
+### 📕 왜 Undefined가 발생하였는가?
+<Callout emoji="🤔">
+  생각해봅시다!
+  <ul className='list-inside'>
+    <li>왜 `Undefined`가 발생했을까요?</li>
+  </ul>
+</Callout>
+우리는 이미 답을 알고 있습니다. <br />
+`this` 바인딩과 관련이 있는 문제입니다. <br />
+어떤 함수를 `메서드로서` 호출할 때는 메서드명 바로 앞의 객체가 곧 this가 됩니다. <br />
+이에 따라서, `thomas.__proto__.getName()`에서 `getName` 함수 내부에서의 `this`는 `thomas`가 아니라, `thomas.__proto__`라는 객체가 되기 떄문에 그렇습니다.<br />
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>참고</emp>
+  <ol className='list'>
+    <li>찾고자 하는 식별자가 정의돼 있지 않을 때는 `Error`대신 `undefined`를 반환한다라는 자바스크립트 규약이 있다는 걸 기억하세요</li>
+  </ol>
+</Callout>
+
+그러면 `__proto__`객체에 `name` 프로퍼티가 있으면 어떻게 될까요? <br />
+```javascript
+let suzi = new Person('suzi');
+suzi.__proto__._name = 'SUZI__proto__';
+suzi.__proto__.getName();
+```
+
+실행해본 결과는 아래와 같습니다. <br />
+
+![prototype](/images/chapter6/prototype8.png)
+
+위와 같이 정상적으로 동작하는 것을 확인할 수 있습니다. <br />
+다만 이 경우는 매번 인스턴스마다 `_name`을 새롭게 생성해야하는 문제가 있는 것이지요. <br />
+<br />
+<Callout emoji="🤔">
+  생각해봅시다!
+  <ul className='list-inside'>
+    <li>`this`를 `__proto__`가 아니라, 인스턴스에서 곧바로 메서드를 쓰게 하고 싶으면 어떻게 할까요?</li>
+  </ul>
+</Callout>
+
+답은 `__proto__`를 빼고 사용하면 됩니다. <br />
+실제로, 자바스크립트는 `__proto__`에 할당된 요소를 `__proto__`를 생략하고 사용할 수 있게 하였으며, 이 경우 `this`는 `__proto__`가 아닌, 인스턴스 자체에 묶이게 됩니다. <br />
+
+```javascript
+let suzi = new Person('Suzi', 28);
+suzi.getName(); // Suzi
+let iu = new Person('Jieun', 28);
+iu.getName(); // Jieun
+```
+
+이렇게 표현이 되는 것이지요. <br />
+<Callout emoji="🤔">
+  생각해봅시다!
+  <ul className='list-inside'>
+    <li>어떤 원리로 `__proto__`가 생략이 되는 걸까요?</li>
+  </ul>
+</Callout>
+
+이유는 없습니다. 자바스크립트를 만든 브랜든 아이크의 머리에서 나온 아이디어로, 설계자가 처음부터 이렇게 반영한 것이라고 생각하시면 됩니다.<br />
+큰 이유가 있어서 그런게 아니라 걍 이렇게 만들어졌구나 하며 받아들이시면 됩니다. <br />
+
+<br />
+
+그러면 지금까지의 도식을 살펴볼까요? <br />
+
+![prototype](/images/chapter6/prototype9.png)
+- 출처 : 코어자바스크립트 교재 152페이지 그림 6-3
+
+여기까지 온 지금 이 그림이 어떻게 보이시나요? 구조가 눈에 들어오시나요? <br />
+
+## 🚀 레벨업
+
+그러면 이제 아래의 코드를 보면서 한번 살펴봅시다. <br />
+```javascript
+let Constructor = function (name) {
+  this.name = name;
+};
+Constructor.prototype.method1 = function() {};
+Constructor.prototype.property1 = 'Constructor Prototpye Property';
+
+let instance = new Constructor('Instance');
+console.dir(Constructor);
+console.dir(instance);
+```
+
+위 코드를 실행시킨 결과는 아래와 같습니다. <br />
+
+![prototype](/images/chapter6/prototype10.png)
+
+`prototypes`와 `[[Prototype]]`이 보이시나요? <br />
+위와 같이 `prototype`이 공유 되지만, 앞서 이야기했듯이 `[[Prototype]]` 으로 보입니다. <br />
+
+<Callout emoji='💡' type='info'>
+  <emp className='font-bold'>참고</emp>
+  <ol className='list'>
+    <li>크롬 개발자도구에서 짙은 색으로 보이는 것과 옅은 색으로 보이는 것의 차이는 `{enumerable: false}` 속성이 부여됐는지에 따라 다릅니다. <br /> `for in` 등으로 객체의 프로퍼티 전체에 접근하고자 할 때 접근이 되는 것만 짙게 표시해둔 것이지요.</li>
+  </ol>
+</Callout>
+
+이번에는 대표 내장 생성자 함수인 `Array`를 기준으로 살펴볼까요? <br />
+
+```javascript
+let arr = [1, 2];
+console.dir(arr);
+console.dir(Array);
+```
+
+![prototype](/images/chapter6/prototype11.png)
+
+위와 같이 표시되는 것을 확인할 수 있습니다. <br />
+`Local Variable`과 `Prototype`을 반드시 구분해서 살펴봐주세요! <br />
+`Array`의 `from()`, `isArray()` 등의 메서드는 오직 `Array`에서만 쓸 수 있게 `Array`내의 `지역 변수`에 할당된 것을 유심히 기억해주세요! <br />
+
+![prototype](/images/chapter6/prototype12.png)
+- 출처 : 코어자바스크립트 교재 156페이지 그림 6-4
+
+도식도로 표현하면 위와 같습니다. <br />
+이해가 되시나요? <br />
+
+## 🚀 Constructor 프로퍼티
+<Callout emoji="🤔">
+  생각해봅시다!
+  <ul className='list-inside'>
+    <li>`프로토 타입`을 이용해서 구현하는 방식이 `객체지향`에 속한다면, 어떻게 인스턴스를 생성하게 한 원래의 `생성자 함수(자기 자신)`을 알 수 있을까요?</li>
+    <li>클래스 문법으로 치면 클래스 그 자체를 말이죠.</li>
+  </ul>
+</Callout>
+
+우선 한번 생각해볼까요? <br />
+프로토타입 기반의 방식에서는 `상속`을 어떻게 구현할 수 있을까요? <br />
+클래스 기반의 방식에서는 `extends`와 같은 키워드를 쓰면 되는데 말이죠. <br />
+
+<br />
+
+자바스크립트에서는 이 문제를 `constructor`라는 프로퍼티를 통해서 해결했습니다. <br />
+이 프로퍼티는 단어 그대로 원래의 생성자 함수(자기 자신)을 참조합니다. <br />
+이를 통해서 인스턴스로부터 그 원형이 무엇인지 코드 내에서 추론이 가능해지죠. <br />
+
+```javascript
+let arr = [1, 2];
+Array.prototype.constructor === Array // true
+arr.__proto__.constructor === Array // true
+arr.constructor === Array // true
+
+let arr2 = new arr.constructor(3, 4);
+console.log(arr2); // [3, 4]
+```
+
+이를 통해서 원형을 몰라도 인스턴스를 생성할 수 있게 되는 것이죠. <br />
+
+<br />
+
+한편으로, `constructor`는 읽기 전용 속성이 부여된 예외적인 경우(기본형 리터럴 변수 - `number`, `string`, `boolean`)을 제외하고는 값을 바꿀 수 있습니다. <br />
+그래서 아래와 같은 재밌는 작업도 가능하죠. <br />
+
+```javascript
+let NewConstructor = function() {
+  console.log('this is new constructor');
+}
+let dataTypes = [
+  1, // Number & false
+  'test', // String & false
+  true, // Boolean & false
+  {}, // NewConstructor & false
+  [], // newConstructor & false
+  function () {}, // newConstructor & false
+  /test/, // newConstructor & false
+  new Number(), // newConstructor & false
+  new String(), // newConstructor & false
+  new Boolean, // newConstructor & false
+  new Object(), // newConstructor & false
+  new Array(), // newConstructor & false
+  new Function(), // newConstructor & false
+  new RegExp(), // newConstructor & false
+  new Date(), // newConstructor & false
+  new Error(), // newConstructor & false
+];
+
+dataTypes.forEach(function(d) {
+  d.constructor = NewConstructor;
+  console.log(d.constructor.name, '&', d instanceof NewConstructor);
+});
+```
+
+`constructor`도 오버라이딩이 가능하다는 것을 확인할 수 있었습니다. <br />
+그렇기에, `constructor` 프로퍼티에 의존해서 어떤 인스턴스의 생성자 정보를 알아내는게 항상 안전하지는 않다는 이야기이지요. <br />
+하지만 이를 이용해서 클래스의 상속을 흉내낼 수 있기도 하는데 이에 대해서는 7장에서 다루어질 예정입니다. <br />
+
+<br />
+
+정리차원에서 예제 하나만 더 살펴봅시다. <br />
+```javascript
+let Person = function (name) {
+  this.name = name;
+};
+let p1 = new Person('사람 1'); // {name : "사람 1"} true
+let p1Proto = Object.getPrototypeOf(p1);
+let p2 = new Person.prototype.constructor('사람2'); // {name : "사람2"} true
+let p3 = new p1Proto.constructor('사람3'); // {name : "사람3"} true
+let p4 = new p1.__proto__.constructor('사람4'); // {name: "사람4"} true
+let p5 = new p1.constructor('사람5'); // {name: "사람5"} true
+
+[p1, p2, p3, p4, p5].forEach(function (p) {
+  console.log(p, p instanceof Person);
+});
+```
+
+p1부터 p5까지는 모두 `Person`의 인스턴스 입니다. 따라서 다음의 두 공식이 성립합니다. <br />
+
+1. 다음 각 줄은 모두 동일한 대상을 가리킵니다.
+```javascript
+[Constructor]
+[instance].__proto__.constructor
+[instance].constructor
+Object.getPrototypeOf([instance]).constructor
+[Constructor].prototype.constructor
+```
+2. 둘째, 다음 각 줄은 모두 동일한 객체(prototype)에 접근할 수 있습니다. <br />
+```javascript
+[Constructor].prototype
+[instance].__proto__
+[instance]
+Object.getPrototypeOf([instance])
+```
