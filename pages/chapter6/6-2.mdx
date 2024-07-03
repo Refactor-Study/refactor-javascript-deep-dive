@@ -1,0 +1,262 @@
+---
+title: 프로토타입 체인
+date: 2024년 7월 2일
+image: /images/chapter6/thumbnail_6-2.png
+author: 이호연
+---
+
+## 메서드 오버라이드
+
+`__proto__{:js}`를 생략하면 `Object.prototype`에 있는 메서드를 호출합니다. <br/>
+그런데 만약 인스턴스가 동일한 이름의 프로퍼티나 메서드를 가지고 있다면 어떻게 될까요?
+
+```javascript showLineNumbers copy
+const Person = function (name) {
+  this.name = name;
+};
+Person.prototype.getName = function () {
+  return this.name;
+};
+
+const hoyeon = new Person('호연');
+hoyeon.getName = function () {
+  return `내 이름은 ${this.name}입니다.`;
+};
+console.log(hoyeon.getName()); // 내 이름은 호연입니다.
+```
+
+이렇게 하면 `Person.prototype`에 있는 `getName` 메서드가 아니라, `hoyeon` 인스턴스의 `getName` 메서드가 호출됩니다. <br/>
+이것을 메서드 **오버라이드(override)** 라고 합니다.
+
+import { Callout } from 'nextra/components';
+
+<Callout type='info' emoji='💡'>
+  <emp className='font-bold'>Override</emp>
+  <ol className='list-decimal'>
+    <li className='flex flex-row gap-1'>
+      <div>1.</div>
+      <span>(직권을 이용하여 결정·명령 등을) 기각[무시]하다.</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>2.</div>
+      <span>…보다 더 중요하다[우선하다]</span>
+    </li>
+    <li className='flex flex-row gap-1'>
+      <div>3.</div>
+      <span>(자동으로 진행되는 과정을) 중단시키다</span>
+    </li>
+  </ol>
+</Callout>
+
+그렇다면 메서드 오버라이딩이 이루어져 있는 상황에서 prototype 메서드에 접근하려면 어떻게 해야할까요?
+
+```javascript showLineNumbers copy
+console.log(hoyeon.__proto__.getName.call(hoyeon)); // 호연
+```
+
+[3장](/chapter3/3-2#call-메서드)에서 배운 `call` 메서드를 사용하면 됩니다. <br/>
+일반적으로 메서드가 오버라이드 된 경우에는 자신으로부터 가장 가까운 메서드에만 접근할 수 있지만, 그 다음으로 가까운 `__proto__`의 메서드도 우회적인 방법을 통해서 접근할 수 있습니다.
+
+## 프로토타입 체인
+
+프로토타입 체인은 `__proto__`를 통해 객체의 프로토타입을 찾아가는 과정을 말합니다. <br/>
+예제로 다음 객체의 내부 구조를 살펴봅시다.
+
+```javascript showLineNumbers copy
+console.dir({ a: 1 });
+```
+
+![객체의 내부 구조](/images/chapter6/object_internals.png)
+
+위 그림은 `{ a: 1 }` 객체의 내부 구조를 나타낸 것입니다. <br/>
+Object의 인스턴스 임을 알 수 있고, `a` 프로퍼티를 와 그 값 1을 가지고 있습니다. <br/>
+`__proto__`을 나타내는 `[[Prototype]]` 내부에는 `hasOwnProperty`, `isPrototypeOf`, `propertyIsEnumerable`, `toString`, `valueOf` 등의 메서드가 있습니다. <br/>
+`constructor` 프로퍼티는 `Object` 생성자 함수를 가리키고 있습니다.
+
+이번에는 배열을 살펴봅시다.
+
+```javascript showLineNumbers copy
+console.dir([1, 2]);
+```
+
+배열 `[1, 2]`의 내부 구조는 다음과 같습니다.
+
+![배열 내부 구조](/images/chapter6/array_internals.png)
+
+배열 리터털의 `__proto__`는 `Array.prototype`을 가리키고 있습니다. <br/>
+그러나 `Array.prototype`의 `__proto__`는 `Object.prototype`을 가리키고 있습니다. <br/>
+
+왜 그럴까요? <br/>
+우리가 앞서 토의 했던 것처럼, 배열은 객체의 일종이기 때문입니다. <br/>
+따라서 기본적으로 모든 객체의 프로토타입은 `Object.prototype`을 가리키게 됩니다. `prototype` 객체도 에외가 아닙니다. <br/>
+
+![배열의 내부 도식](/images/chapter6/array_prototype_chain.png)
+
+배열의 프로토타입 체인은 위 그림과 같습니다. <br/>
+`__proto__`는 생략이 가능하기 때문에, 배열`[1, 2]`이 `Array.prototype` 내부의 메서드를 자신의 것처럼 실행할 수 있었습니다. <br/>
+마찬가지로 `Array.prototype`은 `Object.prototype`의 메서드를 자신의 것 처럼 사용할 수 있습니다.
+
+<Callout type='info' emoji='💡'>
+  이렇게 어떤 데이터의 `__proto__` 프로퍼티 내부에 다시 `__proto__` 프로퍼티가
+  있고, 그것이 또 다른 객체를 가리키는 것을 **프로토타입 체인**이라고 합니다.{' '}
+  <br />
+  그리고 이 체인을 따라가며 검색하는 것을 **프로토타입 체이닝**이라고 합니다.
+</Callout>
+
+이 프로토타입 체이닝은 [메서드 오버라이드](#메서드-오버라이드)와 동일한 맥락입니다. 어떤 메서드를 호출하면 엔진은 데이터 자신의 프로퍼티들을 검색해서 원하는 메서드가 있는지 찾습니다. <br/>
+만약 없다면 `__proto__`를 따라가며 검색을 계속합니다. <br/>
+
+다음의 예시를 한번 봅시다.
+
+```javascript showLineNumbers copy
+const arr = [1, 2];
+Array.prototype.toString.call(arr); // (a)
+Object.prototype.toString.call(arr); // (b)
+arr.toString(); // (c)
+
+arr.toString = function () {
+  return this.join('_');
+};
+arr.toString(); // (d)
+```
+
+`arr` 변수는 배열이므로 `arr.__proto__`는 `Array.prototype`을 가리키고, `Array.prototype.__proto__`는 `Object.prototype`을 가리킵니다. <br/>
+이때, `toString`이라는 메서드는 `Array.prototype`에도 있고, `Object.prototype`에도 있습니다. <br/>
+
+<Callout emoji='🤔'>그렇다면 어떤 값이 출력될까요?</Callout>
+
+![데이터 타입별 프로토타입 체인](/images/chapter6/prototype_chain__for_each_types.png)
+
+위 그림은 각 데이터 타입별 프로토타입 체인을 나타낸 것입니다. <br/>
+그렇다면,
+
+<Callout emoji='🤔'>
+  1. 위쪽 삼각형의 우측 꼭짓점에는 무조건 `Object.prototype`이 있는걸까요? -> [객체 전용 메서드의 예외 사항](#객체-전용-메서드의-예외-사항) 
+  2. 삼각형은 꼭 두 개만 연결될까요? -> [다중 프로토타입 체인](#다중-프로토타입-체인)
+</Callout>
+
+## 객체 전용 메서드의 예외 사항
+
+어떤 생성자 함수이든 `prototype`은 반드시 객체이기 때문에 `Object.prototype`이 언제나 프로토타입 체인의 최상단에 존재합니다. <br/>
+따라서 객체에서만 사용할 메서드는 다른 데이터 타입처럼 프로토타입 객체 안에 정의할 수 없습니다. <br/>
+
+```javascript showLineNumbers copy
+Object.prototype.getEntries = function () {
+  const res = [];
+  for (let prop in this) {
+    if (this.hasOwnProperty(prop)) {
+      res.push([prop, this[prop]]);
+    }
+  }
+  return res;
+};
+
+const data = [
+  ['object', { a: 1, b: 2 }],
+  ['number', 123],
+  ['string', 'hello'],
+  ['boolean', true],
+  ['function', function () {}],
+  ['array', [1, 2, 3]],
+];
+// 출력값을 고민해봅시다.
+data.forEach(([type, value]) => {
+  console.log(`[${type}]`, value.getEntries());
+});
+```
+
+이렇게 되면 Object에 만들어준 메서드들을 모든 데이터 타입에서 사용할 수 있게 됩니다. <br/>
+따라서 Object에서만 사용할 메서드라면 `Object.prototype`에 추가하는 것은 좋지 않은 방법입니다. 이러한 메서드는 스태틱 메서드로 만드는 것이 좋습니다. <br/>
+
+```javascript showLineNumbers copy
+Object.getEntries = function (obj) {
+  const res = [];
+  for (let prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      res.push([prop, obj[prop]]);
+    }
+  }
+  return res;
+};
+
+const data = [
+  ['object', { a: 1, b: 2 }],
+  ['number', 123],
+  ['string', 'hello'],
+  ['boolean', true],
+  ['function', function () {}],
+  ['array', [1, 2, 3]],
+];
+
+data.forEach(([type, value]) => {
+  console.log(`[${type}]`, Object.getEntries(value));
+});
+```
+
+<Callout type="info" emoji="💡">
+  <emp className="font-bold">예외</emp>
+  <br />
+  `Object.create`를 이용하면 `Object.prototype`의 메서드에 접근할 수 없는 경우가 있습니다. <br />
+  `Object.create(null)`로 생성된 객체는 프로토타입이 없기 때문에 `Object.prototype`의 메서드에 접근할 수 없습니다.
+  
+
+  ```javascript showLineNumbers copy
+  const _proto = Object.create(null);
+  _proto.getValue = function(key) {
+    return this[key];
+  };
+  const obj = Object.create(_proto);
+  obj.a = 1;
+  console.log(obj.getValue('a')); // 1
+  console.dir(obj); // { a: 1 }
+  ```
+
+  ![Object.create(null)로 생성된 객체](/images/chapter6/object_create_null.png)
+
+</Callout>
+
+## 다중 프로토타입 체인
+
+프로토타입 체인은 1단계, 2단계만 연결되는 것은 아닙니다. <br/>
+대각선의 `__proto__`를 연결하여 무한대로 체인 관계를 이어나갈 수 있는데, 이 방법으로 `class` 문법을 구현할 수 있습니다.
+
+대각선의 `__proto__`를 연결하는 방법은 `__proto__`가 가리키는 대상, 즉 생성자 함수의 `prototype`을 바꾸는 것입니다. <br/>
+
+```javascript showLineNumbers copy
+const Grade = function () {
+  const args = Array.prototype.slice.call(arguments);
+  for (let i = 0; i < args.length; i++) {
+    this[i] = args[i];
+  }
+  this.length = args.length;
+};
+const g = new Grade(100, 80);
+```
+
+변수 `g`는 `Grade` 생성자 함수로 생성된 인스턴스입니다. <br/>
+`Grade` 생성자 함수는 `Array` 생성자 함수와 유사한 방식으로 동작합니다. <br/>
+그러나 `g` 인스턴스는 `Array` 인스턴스가 아니기 때문에 `Array.prototype`의 메서드를 사용할 수 없습니다. <br/>
+
+```javascript showLineNumbers copy
+console.log(g.at(1)); // TypeError: g.at is not a function
+```
+
+이때, `Grade.prototype`을 `Array.prototype`으로 바꾸면 `g` 인스턴스는 `Array` 인스턴스처럼 동작할 수 있습니다.
+
+```javascript showLineNumbers copy
+Grade.prototype = [];
+const g2 = new Grade(100, 80);
+
+console.log(g2.at(1)); // 80
+```
+
+이 명령에 의해 서로 분리되어있던 데이터가 연결되어 하나의 체인을 이루게 됩니다. <br/>
+
+![다중 프로토타입 체인](/images/chapter6/multiple_prototype_chaining.png)
+![다중 프로토타입 체인](/images/chapter6/multiple_prototype_chaining_2.png)
+
+이제 `Grade`의 인스턴스인 `g`에서 직접 배열의 메서드를 사용할 수 있습니다.
+
+```javascript showLineNumbers copy
+console.log(g2.at(1)); // 80
+```
