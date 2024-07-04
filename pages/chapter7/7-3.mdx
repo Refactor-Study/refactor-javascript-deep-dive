@@ -1,0 +1,329 @@
+---
+title: 클래스 상속
+author: 이가은
+date: 2024년 07월 04일
+---
+
+이번 챕터에서는 프로토타입 체인을 활용해 클래스 상속을 구현해보겠습니다.
+
+## 01 기본 구현
+
+```javascript showLineNumbers filename="Grade 생성자 함수 및 인스턴스" copy
+var Grade = function () {
+   //arguments 객체를 배열처럼 취급하여 slice 메서드를 호출한 후, 실제 배열로 변환
+   var args = Array.prototype.slice.call(arguments);
+   for (var i = 0; i < args.length; i++) {
+      this[i] = args[i];
+   }
+   this.length = args.length;
+};
+// Grade 인스턴스들이 배열의 메서드들을 상속받을 수 있도록 하기 위하여 빈 배열 참조
+Grade.prototype = [];
+var g = new Grade(100, 80);
+g.push(90);
+console.log(g); // Grade { 0: 100, 1: 80, 2: 90, length: 3 }
+delete g.length; // length 프로퍼티 삭제
+g.push(70);
+console.log(g); // Grade { 0: 70, 1: 80, 90, length: 1}
+// push한 값이 0번째 인덱스에 들어가고, length가 1이 됨
+```
+
+이 구현의 문제는 다음과 같습니다
+
+-  length 프로퍼티가 configurable (삭제 가능) 하다는 점
+-  Grade.prototype에 빈 배열을 참조시켰다는 점
+
+그래서 g.length 프로퍼티를 삭제 후 `g.push(70){:js}`를 하였을 때 `g._proto__`가 빈 배열인 `Grade.prototype`을 가리키고 있으므로, 빈 배열이 length 0이므로, 0번째 index에 70을 넣고, length를 1이라고 한 것입니다.
+
+이처럼 클래스에 있는 값은 인스턴스의 동작에 영향을 주는 것은 클래스의 추상성을 해치는 것이므로, 클래스는 오직 인스턴스가 사용할 메서드만을 지니는 틀로만 작용하게끔 작성해야 합니다.
+
+이번에는 직사각형과 정사각형 클래스를 통한 상속 관계를 구현해보겠습니다.
+
+```javascript showLineNumbers filename="직사각형과 정사각형 클래스 상속 구현" copy
+var Rectangle = function (width, height) {
+   this.width = width;
+   this.height = height;
+};
+Rectangle.prototype.getArea = function () {
+   return this.width * this.height;
+};
+var rect = new Rectangle(3, 4);
+console.log(rect.getArea()); // 12
+var Square = function (width) {
+   Rectangle.call(this, width, width);
+};
+Square.prototype = new Rectangle();
+var sq = new Square(5);
+console.log(sq.getArea()); // 25
+```
+
+이는 앞서 Grade를 구현했던 것과 같은 방법으로 구현했기 때문에 클래스에 있는 값이 인스턴스에 영향을 줄 수 있 구조라는 동일한 문제를 가지고 있습니다.
+
+![Rectangle & Square Class 콘솔](/images/chapter7/rectangle_console_1.png)
+
+콘솔을 찍어 확인하였을 때 sq의 width와 height가 5로 알맞게 입력된 것을 확인할 수 있습니다.
+
+그러나 `Square의 __proto__`인 Rectangle이 width와 height 프로퍼티를 undefined로 갖고 있는 것을 확인할 수 있습니다.
+
+이는 앞에서 Grade의 인스턴스인 `g.__proto__`의 length 프로퍼티를 삭제하였을 때, 프로토타입 체이닝에 의하여 `g.__proto__.__proto__`까지 참조하게 되어 빈 배열을 참조하고 있던 Grade.prototype의 length 값을 참조한 것과 같은 오류를 발생할 수 있습니다.
+
+`sq.__proto__.width`를 삭제하면 `sq.__proto__.__proto__`인 Rectangle의 width 값 undefined를 출력할 수 있다는 것이지요.
+
+<br />
+
+그리고 아래와 같이 sq의 constructor이 Rectangle을 가리키고 있어 이 또한 문제가 됩니다.
+![Rectangle & Square Class 콘솔](/images/chapter7/rectangle_console_2.png)
+
+이와 하위 클래스로 삼을 생성자 함수의 prototype에 상위 클래스의 인스턴스를 부여하는 것만으로도 기본적인 메서드 상속 가능하지만 다양한 문제가 발생할 여지가 있어 구조적으로 안정성이 떨어지는 것을 확인할 수 있습니다.
+
+import { Callout } from 'nextra/components';
+
+<Callout emoji="🤔">
+   <p>그렇다면 클래스가 구체적인 데이터를 지니지 않게 하는 방법은 무엇이 있을까요?</p>
+</Callout>
+
+## 02 클래스가 구체적인 데이터를 지니지 않게 하는 방법
+
+아래와 같은 3가지 방법이 존재합니다.
+
+### [1] 인스턴스 생성 후 프로퍼티 제거
+
+일단 만들고 나서 프로퍼티들을 일일이 지우고 더는 새로운 프로퍼티를 추가할 수 없게 하는 것입니다
+
+```javascript showLineNumbers copy
+delete Square.prototype.width;
+delete Square.prototype.height;
+Object.freeze(Square.prototype);
+```
+
+프로퍼티가 많을 경우 다음과 같이 범용적인 함수를 사용할 수 있습니다.
+
+```javascript showLineNumber copy
+var extendClass1 = function (SuperClass, SubClass, subMethods) {
+   // SubClass는 SuperClass의 프로토타입 메서드와 프로퍼티를 상속받습니다.
+   SubClass.prototype = new SuperClass();
+   for (var prop in SubClass.prototype) {
+      // SubClass.prototype에 있는 모든 프로퍼티에 대해 반복문을 실행합니다.
+      // hasOwnProperty 메서드를 사용하여 프로토타입 체인에 있는 상속된 프로퍼티가 아닌,
+      // SubClass.prototype 자체에 직접 정의된 프로퍼티인지 확인합니다.
+      if (SubClass.prototype.hasOwnProperty(prop)) {
+         // 직접 정의된 프로퍼티를 삭제합니다.
+         이는 상속 과정에서 불필요한 인스턴스 프로퍼티를 제거합니다.
+         delete SubClass.prototype[prop];
+      }
+   }
+   // subMethods 객체가 제공된 경우, SubClass.prototype에 추가할 메서드가 있는지 확인합니다.
+   if (subMethods) {
+      // subMethods 객체에 있는 모든 메서드에 대해 반복문을 실행합니다.
+      for (var method in subMethods) {
+         // subMethods 객체에 있는 메서드를 SubClass.prototype에 추가합니다.
+         // 이를 통해 SubClass는 SuperClass를 상속받으면서도 추가적인 메서드를 가질 수 있습니다.
+         SubClass.prototype[method] = subMethods[method];
+      }
+   }
+   Object.freeze(SubClass.protype);
+   return SubClass;
+};
+
+var Square = extendClass1(Rectangle, function (width) {
+   Rectangle.call(this, width, width);
+});
+```
+
+### [2] 빈 함수 활용
+
+SubClass의 prototype에 직접 SuperClass의 인스턴스를 할당하는 대신 아무런 프로퍼티를 생성하지 않는 빈 생성자 함수(Bridge)를 하나 더 만들어서 그 prototype이 SuperClass의 prototype을 바라보게끔 한 다음, SubClass의 prototype에는 Bridge의 인스턴스를 할당하게 하는 방법입니다.
+
+```javascript showLineNumber copy
+var Rectangle = function (width, height) {
+   this.width = width;
+   this.height = height;
+};
+Rectangle.prototype.getArea = function () {
+   return this.width * this.height;
+};
+var Square = function (width) {
+   Rectangle.call(this, width, width);
+};
+var Bridge = function () {};
+Bridge.prototype = Rectangle.prototype;
+Square.prototype = new Bridge();
+Object.freeze(Square.prototype);
+```
+
+-  과정
+   1. Bridge라는 빈 함수를 만듦
+   2. Bridge.prototype이 Rectangle.prototype을 참조하게 함
+   3. Square.prototype에 new Bridge()로 할당
+
+이를 통해 인스턴스를 제외한 프로토타입 체인 경로상에는 더이상 구체적인 데이터가 남아있지 않게 됩니다.
+
+범용성을 고려하여 아래와 같이 작성할 수 있습니다.
+
+```javascript showLineNumber copy
+var extendClass2 = (function () {
+   var Bridge = function () {};
+   //subMethods에는 subClass의 prototype에 담길 메서드들을 객체로 전달하게끔 함
+   return function (SuperClass, SubClas, subMethods) {
+      Bridge.prototype = SuperClass.prototype;
+      Subclass.prototype = new Bridge();
+      if (subMethods) {
+         for (var method in subMethods) {
+            SubClass.prototype[method] = subMethods[method];
+         }
+      }
+      Object.freeze(SubClass.prototype);
+      return SubClass;
+   };
+})();
+```
+
+이 코드는 즉시실행함수 내부에서 Brige를 선언해서 이를 클로저로 활용함으로써 메모리에 불필요한 함수 선언을 줄였습니다.
+
+<Callout>
+   클로저를 사용하여 Bridge 생성자가 한 번만 정의되므로 extendClass2 함수를 여러 번 호출하더라도 Bridge 생성자가 매번
+   새로 정의되지 않습니다. 즉, Bridge는 한 번 정의되고 모든 호출에서 재사용됩니다. 이를 통해 메모리 사용과 성능이
+   최적화됩니다.
+</Callout>
+
+### [3] Object.cretae 이용
+
+마지막으로 Object.create으로 이용하는 방법은 SubClass의 prototype의 **proto**가 SuperClass의 prototype을 바라보되, SuperClass의 인스턴스가 되지는 않으므로 앞서 소개한 두 방법보다 간단하면서 안전합니다.
+
+```javascript showLineNumber copy
+// (...생략)
+Square.prototype = Object.create(Rectangle.prototype);
+Object.freeze(Square.prototype);
+// (...생략)
+```
+
+## 03 constructor 복구하기
+
+앞의 내용에서 기본적인 상속까진 성공했지만, SubClass 인스턴스의 constructor은 여전히 SuperClass를 가리키는 상태입니다.
+
+(SubClass 인스턴스에는 constructor가 없고, SubClass.prototype에도 없는 상태입니다.)
+
+SubClass.prototype.constructor가 원래의 SubClass를 바라보도록 하기 위해 위 세 가지 코드에
+
+`SubClass.prototype.constructor = SubClass;`를 추가하였습니다.
+
+[1] 인스턴스 생성 후 프로퍼티 제거
+
+```javascript showLineNumber copy
+var extendClass1 = function (SuperClass, SubClass, subMethods) {
+   SubClass.prototype = new SuperClass();
+   for (var prop in SubClass.prototype) {
+      if (SubClass.prototype.hasOwnProperty(prop)) {
+         delete SubClass.prototype[prop];
+      }
+   }
+   SubClass.prototype.constructor = SubClass;
+   if (subMethods) {
+      for (var method in subMethods) {
+         SubClass.prototype[method] = subMethods[method];
+      }
+   }
+   Object.freeze(SubClass.prototype);
+   return SubClass;
+};
+```
+
+[2] 빈 함수 활용
+
+```javascript showLineNumber copy
+var extendClass2 = (function () {
+   var Bridge = function () {};
+   return function (SuperClass, SubClas, subMethods) {
+      Bridge.prototype = SuperClass.prototype;
+      Subclass.prototype = new Bridge();
+      SubClass.prototype.constructor = SubClass;
+      if (subMethods) {
+         for (var method in subMethods) {
+            SubClass.prototype[method] = subMethods[method];
+         }
+      }
+      Object.freeze(SubClass.prototype);
+      return SubClass;
+   };
+})();
+```
+
+[3] Object.cretae 이용
+
+```javascript showLineNumber copy
+var extendClass3 = function (SuperClass, SubClass, subMethods) {
+   SubClass.prototype = Object.create(SuperClass.prototype);
+   SubClass.prototype.constructor = SubClass;
+   if (subMethods) {
+      for (var method in subMethods) {
+         SubClass.prototype[method] = subMethods[method];
+      }
+   }
+   Object.freeze(SubClass.prototype);
+   return SubClass;
+};
+```
+
+### 04 상위 클래스에의 접근 수단 제공
+
+이번에는 하위 클래스의 메서드에서 상위 클레스의 메서드 실행 결과를 바탕으로 추각적인 작업을 수행하고 싶은 경우, 하위 클래스에서 상위 클래스의 프로토타입 메서드에 접근하기 위한 별도의 수단이 필요하므로 `super()`를 흉내내면 다음과 같습니다.
+
+```javascript showLineNumber copy
+var extendClass3 = function (SuperClass, SubClas, subMethods) {
+   Subclass.prototype = Object.create(SuperClass.prototype);
+   SubClass.prototype.constructor = SubClass;
+   /* 추가된 코드 시작 */
+   SubClass.prototype.super = function (propName) {
+      var self = this;
+
+      // 인자가 비어있을 경우 SuperClass 생성자 함수에 접근
+      if (!propName)
+         return function () {
+            SuperClass.apply(self, arguments);
+         };
+      var prop = SuperClass.prototype[propName];
+
+      // SuperClass의 prototype 내부의 propName에 해당하는 값이 함수가 아닌 경우에는 해당 값을 그대로 반환
+      if (typeof prop !== 'function') return prop;
+
+      // 힘수인 경우 : 클로저를 활용해 메서드 접근
+      return function () {
+         return prop.apply(self, arguments);
+      };
+   };
+   /* 추가된 코드 끝 */
+   if (subMethods) {
+      for (var method in subMethods) {
+         SubClass.prototype[method] = subMethods[method];
+      }
+   }
+   Object.freeze(SubClass.prototype);
+   return SubClass;
+};
+
+var Rectangle = function (width, height) {
+   this.width = width;
+   this.height = height;
+};
+Rectangle.prototype.getArea = function () {
+   return this.width * this.height;
+};
+var Square = extendClass(
+   Rectangle,
+   function (width) {
+      this.super()(width, width);
+   },
+   {
+      getArea: function () {
+         console.log('size is :', this.super('getArea')());
+      },
+   }
+);
+var sq = new Square(10);
+sq.getArea(); // size is : 100
+console.log(sq.super('getArea')()); // 100
+```
+
+-  구현한 super 메서드 사용법
+   -  SuperClass의 생성자 함수에 접근시 this.super() 사용
+   -  SuperClass의 프로토타입 메서드에 접근하고자 할 때는 this.super(propName) 사용
