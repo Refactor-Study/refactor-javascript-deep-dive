@@ -1,0 +1,61 @@
+---
+title: 자바스크립트의 클래스
+author: 이가은
+date: 2024년 07월 04일
+---
+
+## 프로토타입과 클래스
+
+'계층'의 의미를 갖는 클래스 관점에서 접근시 프로토타입은 클래스와 비슷하게 해석될 수 있습니다.
+
+생성자 함수 Array를 new 연산자와 함께 호출하여 만든 인스턴스(`new Array(){:js}`) 는 클래스 관점에서, Array prototype 객체 내부 요소들이 인스턴스에 상속된다고 볼 수 있는 것이지요.
+
+## 스태틱 메서드와 인스턴스 메서드
+
+```js showLineNumbers copy
+const arr = new Array(1, 2);
+console.dir(Array);
+console.dir(arr);
+```
+
+![상속](/images/chapter7/prototype_console_1.png)
+
+Array 내부 프로퍼티들 중 prototype 프로퍼티를 제외한 나머지는 인스턴스에 상속되어 있지 않습니다.
+
+여기서 인스턴스에 상속된 멤버를 인스턴스 멤버(instance member), 그렇지 않은 멤버를 스태틱 멤버(static member)라고 부릅니다.
+
+자바스크립트에서는 인스턴스에도 직접 메서드를 정의할 수 있기 때문에, '인스턴스 메서드'라는 용어를 사용하는 경우, 지칭하는 대상이 프로토타입과 인스턴스 둘 중 어느 곳에 정의한 메서드인지 헷갈리므로, 인스턴스에 상속된 메서드는 **프로토타입 메서드**라고 부르는 것이 주류입니다.
+
+그럼 스태틱 메서드와 인스턴스 메서드의 차이를 예제를 통해 알아볼까요?
+
+```js showLineNumbers copy
+var Rectangle = function (width, height) {
+   this.width = width;
+   this.height = height;
+};
+Rectangle.prototype.getArea = function () {
+   return this.width * this.height;
+};
+Rectangle.isRectangle = function (instance) {
+   return instance instanceof Rectangle && instance.width > 0 && instance.height > 0;
+};
+
+var rect1 = new Rectangle(3, 4);
+console.log(rect1.getArea()); // 12
+console.log(rect1.isRectangle(rect1)); // Error
+console.log(Rectangle.isRectangle(rect1)); // true
+```
+
+여기서 `getArea(){:js}`는 프로토타입 메서드이므로 인스턴스가 `__proto__`를 생략하고 호출할 수 있습니다.
+이처럼 **프로토타입 메서드는 인스턴스에서 직접 호출할 수 있는 메서드**를 말합니다.
+
+`isRectangle(){:js}`은 스태틱 메서드로, 생성자 함수를 this로 해야만 호출할 수 있습니다.
+그러므로 14번째 줄은 인스턴스가 스태틱 메서드를 호출하였기 때문에 에러가 발생하였고, 15번째 줄은 정상적으로 출력되었습니다.
+이처럼 **스태틱 메서드는 인스턴스에서 직접 접근할 수 없는 메서드**를 말합니다.
+
+import { Callout } from 'nextra/components';
+
+<Callout type="info" emoji="💡">
+   인스턴스가 사용할 메서드를 정의한 '틀'의 역할을 담당하는 목적을 가질 때의 클래스는 추상적인 개념이지만, 클래스 자체를
+   this로 해서 접근해야만 하는 스태틱 메서드를 호출할 때의 클래스는 그 자체가 하나의 개체로서 취급됩니다.
+</Callout>
